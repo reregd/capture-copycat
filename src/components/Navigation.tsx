@@ -7,6 +7,7 @@ const navigationItems = [
   { path: "/dossiers", label: "Dossiers" },
   { path: "/simulateurs", label: "Simulateurs" },
   { path: "/sci-2072", label: "SCI - 2072" },
+  { path: "/administration", label: "Administration" },
 ];
 
 export const Navigation = () => {

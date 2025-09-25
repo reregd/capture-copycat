@@ -9,6 +9,7 @@ import Clients from "./pages/Clients";
 import Dossiers from "./pages/Dossiers";
 import Simulateurs from "./pages/Simulateurs";
 import SCI2072 from "./pages/SCI2072";
+import Administration from "./pages/Administration";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -26,6 +27,7 @@ const App = () => (
             <Route path="/dossiers" element={<Dossiers />} />
             <Route path="/simulateurs" element={<Simulateurs />} />
             <Route path="/sci-2072" element={<SCI2072 />} />
+            <Route path="/administration/*" element={<Administration />} />
             {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
             <Route path="*" element={<NotFound />} />
           </Routes>

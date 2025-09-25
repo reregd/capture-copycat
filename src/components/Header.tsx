@@ -6,8 +6,12 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+import { useLocation } from "react-router-dom";
 
 export const Header = () => {
+  const location = useLocation();
+  const isAdministrationPage = location.pathname.startsWith("/administration");
+
   return (
     <header className="bg-white border-b border-border px-6 py-3">
       <div className="flex items-center justify-between">
@@ -51,6 +55,31 @@ export const Header = () => {
           </Button>
 
           <div className="flex items-center space-x-3 pl-4 border-l">
+            {isAdministrationPage && (
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <Button variant="outline" size="sm" className="flex items-center space-x-2">
+                    <span>Administration</span>
+                    <ChevronDown className="h-4 w-4" />
+                  </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent>
+                  <DropdownMenuItem>
+                    <a href="/administration/utilisateurs">Utilisateurs</a>
+                  </DropdownMenuItem>
+                  <DropdownMenuItem>
+                    <a href="/administration/groupes">Groupes</a>
+                  </DropdownMenuItem>
+                  <DropdownMenuItem>
+                    <a href="/administration/profils">Profils</a>
+                  </DropdownMenuItem>
+                  <DropdownMenuItem>
+                    <a href="/administration/votre-structure">Votre structure</a>
+                  </DropdownMenuItem>
+                </DropdownMenuContent>
+              </DropdownMenu>
+            )}
+            
             <div className="w-8 h-8 bg-brand-green rounded flex items-center justify-center text-white text-sm font-medium">
               RV
             </div>
