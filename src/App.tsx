@@ -8,6 +8,9 @@ import Dashboard from "./pages/Dashboard";
 import Clients from "./pages/Clients";
 import ClientProfile from "./pages/ClientProfile";
 import Dossiers from "./pages/Dossiers";
+import DossierFamille from "./pages/DossierFamille";
+import DossierSimulations from "./pages/DossierSimulations";
+import DossierRetraite from "./pages/DossierRetraite";
 import Simulateurs from "./pages/Simulateurs";
 import SCI2072 from "./pages/SCI2072";
 import Administration from "./pages/Administration";
@@ -27,6 +30,9 @@ const App = () => (
             <Route path="/clients" element={<Clients />} />
             <Route path="/clients/:clientId" element={<ClientProfile />} />
             <Route path="/dossiers" element={<Dossiers />} />
+            <Route path="/dossiers/:dossierId/famille" element={<DossierFamille />} />
+            <Route path="/dossiers/:dossierId/simulations" element={<DossierSimulations />} />
+            <Route path="/dossiers/:dossierId/retraite/*" element={<DossierRetraite />} />
             <Route path="/simulateurs" element={<Simulateurs />} />
             <Route path="/sci-2072" element={<SCI2072 />} />
             <Route path="/administration/*" element={<Administration />} />

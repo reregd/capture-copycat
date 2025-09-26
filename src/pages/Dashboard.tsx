@@ -1,3 +1,4 @@
+import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import {
   Table,
@@ -70,20 +71,20 @@ export default function Dashboard() {
               <TableRow key={file.id} className="hover:bg-gray-50">
                 <TableCell className="text-sm">{file.lastModified}</TableCell>
                 <TableCell>
-                  <a 
-                    href="#" 
+                  <Link
+                    to="/dossiers/831d03fe-1b9c-4859-a44d-bb9c1ea8e48a/famille"
                     className="text-primary hover:underline text-sm"
                   >
                     {file.file}
-                  </a>
+                  </Link>
                 </TableCell>
                 <TableCell>
-                  <a 
-                    href="#" 
+                  <Link
+                    to="/clients/client1"
                     className="text-primary hover:underline text-sm"
                   >
                     {file.client}
-                  </a>
+                  </Link>
                 </TableCell>
               </TableRow>
             ))}

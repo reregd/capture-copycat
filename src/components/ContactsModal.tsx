@@ -53,14 +53,13 @@ export function ContactsModal({
   const [formData, setFormData] = useState(contacts);
 
   const civilities = [
-    { value: "", label: "" },
     { value: "monsieur", label: "Monsieur" },
     { value: "madame", label: "Madame" },
     { value: "mademoiselle", label: "Mademoiselle" },
   ];
 
   const countries = [
-    { value: "", label: "Pays de résidence" },
+    { value: "non-defini", label: "Pays de résidence" },
     { value: "france", label: "France" },
     { value: "belgique", label: "Belgique" },
     { value: "suisse", label: "Suisse" },

@@ -76,7 +76,7 @@ const clientData = {
     notes: [],
     contacts: {
       notaire: {
-        civility: "",
+        civility: "monsieur",
         name: "",
         firstName: "",
         study: "",
@@ -87,11 +87,11 @@ const clientData = {
           street: "",
           postalCode: "",
           commune: "",
-          country: ""
+          country: "non-defini"
         }
       },
       expertComptable: {
-        civility: "",
+        civility: "monsieur",
         name: "",
         firstName: "",
         study: "",
@@ -102,7 +102,7 @@ const clientData = {
           street: "",
           postalCode: "",
           commune: "",
-          country: ""
+          country: "non-defini"
         }
       }
     }
@@ -120,24 +120,24 @@ export default function ClientProfile() {
   const [clientInfo, setClientInfo] = useState(client);
   const [contacts, setContacts] = useState(client?.contacts || {
     notaire: {
-      civility: "",
+      civility: "monsieur",
       name: "",
       firstName: "",
       study: "",
       mobilePhone: "",
       workPhone: "",
       email: "",
-      address: { street: "", postalCode: "", commune: "", country: "" }
+      address: { street: "", postalCode: "", commune: "", country: "non-defini" }
     },
     expertComptable: {
-      civility: "",
+      civility: "monsieur",
       name: "",
       firstName: "",
       study: "",
       mobilePhone: "",
       workPhone: "",
       email: "",
-      address: { street: "", postalCode: "", commune: "", country: "" }
+      address: { street: "", postalCode: "", commune: "", country: "non-defini" }
     }
   });
   const [coordinates, setCoordinates] = useState(client?.coordinates || {
@@ -195,6 +195,12 @@ export default function ClientProfile() {
           </Link>
         </div>
         <div className="flex items-center space-x-3">
+          <Link to="/dossiers/831d03fe-1b9c-4859-a44d-bb9c1ea8e48a/famille">
+            <Button variant="outline" size="sm">
+              <FileText className="h-4 w-4 mr-2" />
+              Ouvrir fiche client détaillée
+            </Button>
+          </Link>
           <Button variant="outline" size="sm">Exporter</Button>
           <Button variant="outline" size="sm">Exporter pour l'assistance</Button>
           <Button variant="outline" size="sm">Supprimer</Button>
@@ -330,7 +336,7 @@ export default function ClientProfile() {
                   <div className="flex-1">
                     <div className="flex items-center space-x-3">
                       <Link
-                        to={`/dossiers/${dossier.id}`}
+                        to={`/dossiers/831d03fe-1b9c-4859-a44d-bb9c1ea8e48a/famille`}
                         className="text-primary hover:underline font-medium"
                       >
                         {dossier.title}
