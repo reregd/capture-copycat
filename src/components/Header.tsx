@@ -29,8 +29,8 @@ export const Header = () => {
               <div className="w-1.5 h-1.5 bg-primary rounded-full"></div>
             </div>
             <div>
-              <h1 className="text-2xl font-bold text-foreground">Big</h1>
-              <p className="text-xs text-muted-foreground">H-INVEST GROUP</p>
+              <h1 className="text-2xl font-bold text-foreground">Eparnova</h1>
+              <p className="text-xs text-muted-foreground">ETUDE PATRIMONIALE</p>
             </div>
           </div>
         </div>

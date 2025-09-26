@@ -1,5 +1,6 @@
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { Link } from "react-router-dom";
 import {
   Table,
   TableBody,
@@ -26,6 +27,7 @@ import { useState } from "react";
 const clients = [
   {
     id: 1,
+    clientId: "client1",
     initials: "BR",
     initialsColor: "bg-brand-orange",
     name: "BINELLI Romain alexandre antoine",
@@ -34,6 +36,7 @@ const clients = [
   },
   {
     id: 2,
+    clientId: "client2",
     initials: "DP",
     initialsColor: "bg-brand-green",
     name: "DE BONNIERES Patrice",
@@ -42,6 +45,7 @@ const clients = [
   },
   {
     id: 3,
+    clientId: "client3",
     initials: "DJ",
     initialsColor: "bg-brand-lime",
     name: "DE FRAMOND Jean",
@@ -50,6 +54,7 @@ const clients = [
   },
   {
     id: 4,
+    clientId: "client4",
     initials: "KG",
     initialsColor: "bg-brand-orange",
     name: "KELLER Geoffray",
@@ -58,6 +63,7 @@ const clients = [
   },
   {
     id: 5,
+    clientId: "client5",
     initials: "LC",
     initialsColor: "bg-brand-pink",
     name: "LASNE-PINAULT Corinne",
@@ -240,12 +246,12 @@ export default function Clients() {
                     <div className={`w-8 h-8 ${client.initialsColor} rounded flex items-center justify-center text-white text-sm font-medium`}>
                       {client.initials}
                     </div>
-                    <a 
-                      href="#" 
+                    <Link
+                      to={`/clients/${client.clientId}`}
                       className="text-primary hover:underline font-medium"
                     >
                       {client.name}
-                    </a>
+                    </Link>
                   </div>
                 </TableCell>
                 {visibleColumns.telephone && (

@@ -6,6 +6,7 @@ import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { Layout } from "./components/Layout";
 import Dashboard from "./pages/Dashboard";
 import Clients from "./pages/Clients";
+import ClientProfile from "./pages/ClientProfile";
 import Dossiers from "./pages/Dossiers";
 import Simulateurs from "./pages/Simulateurs";
 import SCI2072 from "./pages/SCI2072";
@@ -24,6 +25,7 @@ const App = () => (
           <Routes>
             <Route path="/" element={<Dashboard />} />
             <Route path="/clients" element={<Clients />} />
+            <Route path="/clients/:clientId" element={<ClientProfile />} />
             <Route path="/dossiers" element={<Dossiers />} />
             <Route path="/simulateurs" element={<Simulateurs />} />
             <Route path="/sci-2072" element={<SCI2072 />} />
