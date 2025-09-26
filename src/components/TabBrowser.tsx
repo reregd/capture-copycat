@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
-import { X, User, FileText, Calculator } from "lucide-react";
+import { X, User, FileText, Calculator, TrendingUp, Shield, Users, Target, FolderOpen } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 interface Tab {
@@ -25,30 +25,71 @@ export function TabBrowser({ children }: TabBrowserProps) {
   // Fonction pour générer un titre et une icône basés sur la route
   const getTabInfo = (path: string): { title: string; icon: React.ReactNode } => {
     if (path.startsWith("/clients/")) {
-      const clientId = path.split("/")[2];
       return {
-        title: `Romain alexandre antoine...`,
+        title: "Romain alexandre antoine...",
         icon: <User className="h-4 w-4" />
+      };
+    }
+
+    if (path.match(/^\/dossiers\/[^\/]+$/) && !path.includes("/famille")) {
+      return {
+        title: "Dossier",
+        icon: <FolderOpen className="h-4 w-4" />
       };
     }
 
     if (path.includes("/dossiers/") && path.includes("/famille")) {
       return {
-        title: "Romain alexandre antoine...",
-        icon: <FileText className="h-4 w-4" />
+        title: "Famille",
+        icon: <Users className="h-4 w-4" />
+      };
+    }
+
+    if (path.includes("/dossiers/") && path.includes("/patrimoine")) {
+      return {
+        title: "Patrimoine & Budget",
+        icon: <TrendingUp className="h-4 w-4" />
+      };
+    }
+
+    if (path.includes("/dossiers/") && path.includes("/fiscalite")) {
+      return {
+        title: "Fiscalité",
+        icon: <Calculator className="h-4 w-4" />
+      };
+    }
+
+    if (path.includes("/dossiers/") && path.includes("/prevoyance")) {
+      return {
+        title: "Prévoyance",
+        icon: <Shield className="h-4 w-4" />
+      };
+    }
+
+    if (path.includes("/dossiers/") && path.includes("/transmission")) {
+      return {
+        title: "Transmission",
+        icon: <Users className="h-4 w-4" />
+      };
+    }
+
+    if (path.includes("/dossiers/") && path.includes("/strategies")) {
+      return {
+        title: "Stratégies",
+        icon: <Target className="h-4 w-4" />
       };
     }
 
     if (path.includes("/dossiers/") && path.includes("/simulations")) {
       return {
-        title: "Romain alexandre antoine...",
+        title: "Simulations",
         icon: <Calculator className="h-4 w-4" />
       };
     }
 
     if (path.includes("/dossiers/") && path.includes("/retraite")) {
       return {
-        title: "Romain alexandre antoine...",
+        title: "Retraite",
         icon: <FileText className="h-4 w-4" />
       };
     }

@@ -195,7 +195,7 @@ export default function ClientProfile() {
           </Link>
         </div>
         <div className="flex items-center space-x-3">
-          <Link to="/dossiers/831d03fe-1b9c-4859-a44d-bb9c1ea8e48a/famille">
+          <Link to="/dossiers/831d03fe-1b9c-4859-a44d-bb9c1ea8e48a">
             <Button variant="outline" size="sm">
               <FileText className="h-4 w-4 mr-2" />
               Ouvrir fiche client détaillée
