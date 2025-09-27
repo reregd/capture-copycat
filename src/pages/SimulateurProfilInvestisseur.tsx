@@ -61,6 +61,19 @@ export default function SimulateurProfilInvestisseur() {
         peaEtTitres: null,
         epargneRetraiteEtEntreprise: null,
       },
+      detailedKnowledge: {
+        assuranceVie: {
+          clauseBeneficiaire: null,
+          typeContrat: null,
+        },
+        peaTitres: {
+          fiscaliteVente: null,
+          typesProduits: null,
+        },
+        epargneRetraite: {
+          blocage: null,
+        },
+      },
       riskProfile: {
         riskTolerance: null,
       },
@@ -291,36 +304,226 @@ export default function SimulateurProfilInvestisseur() {
 
                 {currentStep === 2 && (
                   <section>
-                    <h2 className="text-xl font-semibold mb-3">Connaissance — familles de produits</h2>
+                    <h2 className="text-xl font-semibold mb-3">Connaissance & expérience</h2>
+                    <h3 className="text-lg font-medium mb-4">Connaissez-vous les familles de produits suivantes ?</h3>
+                    <p className="text-gray-600 mb-6">Si oui, sélectionnez les affirmations avec lesquelles vous êtes d'accord.</p>
 
-                    <p className="text-gray-700 mb-6">Connaissez-vous les familles de produits suivantes ?</p>
-
-                    <div className="max-w-3xl space-y-4">
-                      {[
-                        ['assuranceVie','Assurance-vie et capitalisation'],
-                        ['peaEtTitres','PEA et comptes-titres'],
-                        ['epargneRetraiteEtEntreprise','Épargne retraite et entreprise']
-                      ].map(([key, label]) => (
-                        <div key={key} className="flex items-center justify-between p-4 border rounded-lg bg-white">
-                          <div className="text-sm font-medium">{label}</div>
-                          <div className="flex space-x-2">
-                            <Button
-                              variant={getValue(`familiesKnowledge.${key}`) === true ? "default" : "outline"}
-                              size="sm"
-                              onClick={() => update(`familiesKnowledge.${key}`, true)}
-                            >
-                              Oui
-                            </Button>
-                            <Button
-                              variant={getValue(`familiesKnowledge.${key}`) === false ? "default" : "outline"}
-                              size="sm"
-                              onClick={() => update(`familiesKnowledge.${key}`, false)}
-                            >
-                              Non
-                            </Button>
+                    <div className="max-w-4xl space-y-8">
+                      {/* Assurance-vie et capitalisation */}
+                      <Card>
+                        <CardHeader>
+                          <CardTitle className="text-lg">Assurance-vie et capitalisation</CardTitle>
+                        </CardHeader>
+                        <CardContent className="space-y-6">
+                          <div className="flex items-center justify-between p-4 border rounded-lg bg-gray-50">
+                            <div className="text-sm font-medium">Connaissez-vous cette famille de produits ?</div>
+                            <div className="flex space-x-2">
+                              <Button
+                                variant={getValue('familiesKnowledge.assuranceVie') === true ? "default" : "outline"}
+                                size="sm"
+                                onClick={() => update('familiesKnowledge.assuranceVie', true)}
+                              >
+                                Oui
+                              </Button>
+                              <Button
+                                variant={getValue('familiesKnowledge.assuranceVie') === false ? "default" : "outline"}
+                                size="sm"
+                                onClick={() => update('familiesKnowledge.assuranceVie', false)}
+                              >
+                                Non
+                              </Button>
+                            </div>
                           </div>
-                        </div>
-                      ))}
+
+                          {getValue('familiesKnowledge.assuranceVie') === true && (
+                            <div className="space-y-6 ml-4 border-l-2 border-blue-200 pl-6">
+                              <div>
+                                <p className="font-medium mb-3">Affirmeriez-vous plutôt :</p>
+                                <div className="space-y-2">
+                                  {[
+                                    ['clause_designate', 'La clause bénéficiaire permet de désigner les bénéficiaires en cas de décès du souscripteur.'],
+                                    ['clause_rachat', 'La clause bénéficiaire permet de définir les bénéficiaires en cas de rachat du contrat.'],
+                                    ['clause_conditions', 'La clause bénéficiaire permet de définir les conditions que doivent remplir mes héritiers pour pouvoir percevoir le capital investi.'],
+                                    ['clause_unknown', 'Je ne sais pas.']
+                                  ].map(([value, label]) => (
+                                    <label key={value} className="flex items-start space-x-3 p-3 border rounded-lg bg-white hover:bg-gray-50 cursor-pointer">
+                                      <input
+                                        type="radio"
+                                        name="clauseBeneficiaire"
+                                        value={value}
+                                        checked={getValue('detailedKnowledge.assuranceVie.clauseBeneficiaire') === value}
+                                        onChange={() => update('detailedKnowledge.assuranceVie.clauseBeneficiaire', value)}
+                                        className="mt-1"
+                                      />
+                                      <span className="text-sm text-gray-700">{label}</span>
+                                    </label>
+                                  ))}
+                                </div>
+                              </div>
+
+                              <div>
+                                <p className="font-medium mb-3">Affirmeriez-vous plutôt :</p>
+                                <div className="space-y-2">
+                                  {[
+                                    ['cap_beneficiaires', 'Sur un contrat de capitalisation je désigne des bénéficiaires.'],
+                                    ['av_beneficiaires', 'Sur un contrat d\'assurance vie je désigne des bénéficiaires.'],
+                                    ['liste_restreinte', 'La liste des bénéficiaires d\'un contrat de capitalisation ou d\'un contrat d\'assurance-vie est restreinte à la liste des héritiers de l\'assuré.'],
+                                    ['type_unknown', 'Je ne sais pas.']
+                                  ].map(([value, label]) => (
+                                    <label key={value} className="flex items-start space-x-3 p-3 border rounded-lg bg-white hover:bg-gray-50 cursor-pointer">
+                                      <input
+                                        type="radio"
+                                        name="typeContrat"
+                                        value={value}
+                                        checked={getValue('detailedKnowledge.assuranceVie.typeContrat') === value}
+                                        onChange={() => update('detailedKnowledge.assuranceVie.typeContrat', value)}
+                                        className="mt-1"
+                                      />
+                                      <span className="text-sm text-gray-700">{label}</span>
+                                    </label>
+                                  ))}
+                                </div>
+                              </div>
+                            </div>
+                          )}
+                        </CardContent>
+                      </Card>
+
+                      {/* PEA et comptes-titres */}
+                      <Card>
+                        <CardHeader>
+                          <CardTitle className="text-lg">PEA et comptes-titres</CardTitle>
+                        </CardHeader>
+                        <CardContent className="space-y-6">
+                          <div className="flex items-center justify-between p-4 border rounded-lg bg-gray-50">
+                            <div className="text-sm font-medium">Connaissez-vous cette famille de produits ?</div>
+                            <div className="flex space-x-2">
+                              <Button
+                                variant={getValue('familiesKnowledge.peaEtTitres') === true ? "default" : "outline"}
+                                size="sm"
+                                onClick={() => update('familiesKnowledge.peaEtTitres', true)}
+                              >
+                                Oui
+                              </Button>
+                              <Button
+                                variant={getValue('familiesKnowledge.peaEtTitres') === false ? "default" : "outline"}
+                                size="sm"
+                                onClick={() => update('familiesKnowledge.peaEtTitres', false)}
+                              >
+                                Non
+                              </Button>
+                            </div>
+                          </div>
+
+                          {getValue('familiesKnowledge.peaEtTitres') === true && (
+                            <div className="space-y-6 ml-4 border-l-2 border-green-200 pl-6">
+                              <div>
+                                <p className="font-medium mb-3">Affirmeriez-vous plutôt :</p>
+                                <div className="space-y-2">
+                                  {[
+                                    ['compte_titres_impot', 'Sur le compte titre, si je vends une action pour en acheter une autre, je ne paye pas d\'impôt.'],
+                                    ['pea_impot', 'Sur le PEA, si je vends une action pour en acheter une autre, je ne paye pas d\'impôt.'],
+                                    ['pea_5ans', 'Après 5 ans, les dividendes et plus-values dégagées par le PEA sont exonérés d\'impôt et des prélèvements sociaux contrairement au compte titre.'],
+                                    ['fiscalite_unknown', 'Je ne sais pas.']
+                                  ].map(([value, label]) => (
+                                    <label key={value} className="flex items-start space-x-3 p-3 border rounded-lg bg-white hover:bg-gray-50 cursor-pointer">
+                                      <input
+                                        type="radio"
+                                        name="fiscaliteVente"
+                                        value={value}
+                                        checked={getValue('detailedKnowledge.peaTitres.fiscaliteVente') === value}
+                                        onChange={() => update('detailedKnowledge.peaTitres.fiscaliteVente', value)}
+                                        className="mt-1"
+                                      />
+                                      <span className="text-sm text-gray-700">{label}</span>
+                                    </label>
+                                  ))}
+                                </div>
+                              </div>
+
+                              <div>
+                                <p className="font-medium mb-3">Affirmeriez-vous plutôt :</p>
+                                <div className="space-y-2">
+                                  {[
+                                    ['pea_diversifie', 'Sur le PEA, je peux acheter des actions, obligations, immeubles...'],
+                                    ['compte_titres_75', 'Le compte-titres doit être investi à 75 % au moins en actions d\'entreprises cotées en dehors de l\'Union européenne.'],
+                                    ['pea_actions_euro', 'Sur le PEA, je peux acheter des actions européennes.'],
+                                    ['produits_unknown', 'Je ne sais pas.']
+                                  ].map(([value, label]) => (
+                                    <label key={value} className="flex items-start space-x-3 p-3 border rounded-lg bg-white hover:bg-gray-50 cursor-pointer">
+                                      <input
+                                        type="radio"
+                                        name="typesProduits"
+                                        value={value}
+                                        checked={getValue('detailedKnowledge.peaTitres.typesProduits') === value}
+                                        onChange={() => update('detailedKnowledge.peaTitres.typesProduits', value)}
+                                        className="mt-1"
+                                      />
+                                      <span className="text-sm text-gray-700">{label}</span>
+                                    </label>
+                                  ))}
+                                </div>
+                              </div>
+                            </div>
+                          )}
+                        </CardContent>
+                      </Card>
+
+                      {/* Épargne retraite et entreprise */}
+                      <Card>
+                        <CardHeader>
+                          <CardTitle className="text-lg">Épargne retraite et entreprise</CardTitle>
+                        </CardHeader>
+                        <CardContent className="space-y-6">
+                          <div className="flex items-center justify-between p-4 border rounded-lg bg-gray-50">
+                            <div className="text-sm font-medium">Connaissez-vous cette famille de produits ?</div>
+                            <div className="flex space-x-2">
+                              <Button
+                                variant={getValue('familiesKnowledge.epargneRetraiteEtEntreprise') === true ? "default" : "outline"}
+                                size="sm"
+                                onClick={() => update('familiesKnowledge.epargneRetraiteEtEntreprise', true)}
+                              >
+                                Oui
+                              </Button>
+                              <Button
+                                variant={getValue('familiesKnowledge.epargneRetraiteEtEntreprise') === false ? "default" : "outline"}
+                                size="sm"
+                                onClick={() => update('familiesKnowledge.epargneRetraiteEtEntreprise', false)}
+                              >
+                                Non
+                              </Button>
+                            </div>
+                          </div>
+
+                          {getValue('familiesKnowledge.epargneRetraiteEtEntreprise') === true && (
+                            <div className="space-y-6 ml-4 border-l-2 border-purple-200 pl-6">
+                              <div>
+                                <p className="font-medium mb-3">Affirmeriez-vous plutôt :</p>
+                                <div className="space-y-2">
+                                  {[
+                                    ['per_bloque', 'Le Plan d\'Épargne Retraite est un placement dont les sommes investies sont normalement bloquées jusqu\'au départ à la retraite.'],
+                                    ['per_libre', 'Le Plan d\'Épargne Retraite est un placement dont les sommes versées peuvent être retirées à tout moment.'],
+                                    ['per_sans_fiscalite', 'Le Plan d\'Épargne Retraite permet de recevoir un capital ou des revenus sans aucune fiscalité au départ en retraite.'],
+                                    ['per_unknown', 'Je ne sais pas.']
+                                  ].map(([value, label]) => (
+                                    <label key={value} className="flex items-start space-x-3 p-3 border rounded-lg bg-white hover:bg-gray-50 cursor-pointer">
+                                      <input
+                                        type="radio"
+                                        name="blocage"
+                                        value={value}
+                                        checked={getValue('detailedKnowledge.epargneRetraite.blocage') === value}
+                                        onChange={() => update('detailedKnowledge.epargneRetraite.blocage', value)}
+                                        className="mt-1"
+                                      />
+                                      <span className="text-sm text-gray-700">{label}</span>
+                                    </label>
+                                  ))}
+                                </div>
+                              </div>
+                            </div>
+                          )}
+                        </CardContent>
+                      </Card>
 
                       <div className="flex items-center space-x-3 pt-4">
                         <Button variant="outline" onClick={goPrev}>← Revenir</Button>
