@@ -7,7 +7,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Switch } from "@/components/ui/switch";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
-import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Legend, BarChart, Bar, PieChart, Pie, Cell, AreaChart, Area } from 'recharts';
+import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Legend, BarChart, Bar, PieChart, Pie, Cell, AreaChart, Area, RadarChart, PolarGrid, PolarAngleAxis, PolarRadiusAxis, Radar, ComposedChart } from 'recharts';
 import { ArrowLeft, Plus, Settings, Info } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 
@@ -221,17 +221,23 @@ export default function SimulateurAssuranceVie() {
 
   // ====== JSX ======
   return (
-    <div className="space-y-6">
-      <div className="flex items-center gap-4">
-        <Button variant="ghost" size="sm" onClick={() => navigate("/simulateurs")}>
-          <ArrowLeft className="h-4 w-4" />
-        </Button>
-        <h1 className="text-2xl font-bold text-foreground">Assurance vie</h1>
-      </div>
+    <div className="w-full min-h-screen overflow-x-hidden">
+      <div className="max-w-full mx-auto px-2 sm:px-4 lg:px-6 space-y-6">
+        <div className="flex flex-col sm:flex-row items-start sm:items-center gap-4 bg-gradient-to-r from-blue-50 to-indigo-50 p-4 sm:p-6 rounded-2xl border border-blue-200">
+          <Button variant="ghost" size="sm" onClick={() => navigate("/simulateurs")} className="hover:bg-blue-100 flex-shrink-0">
+            <ArrowLeft className="h-4 w-4" />
+          </Button>
+          <div className="min-w-0">
+            <h1 className="text-xl sm:text-2xl lg:text-3xl font-bold bg-gradient-to-r from-blue-600 to-indigo-600 bg-clip-text text-transparent">
+              Simulateur Assurance Vie
+            </h1>
+            <p className="text-sm sm:text-base text-blue-600 mt-1">Simulez l'évolution de votre contrat avec fiscalité détaillée</p>
+          </div>
+        </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        <div className="grid grid-cols-1 2xl:grid-cols-3 gap-4 lg:gap-6 xl:gap-8">
         {/* Formulaire principal */}
-        <div className="lg:col-span-2 space-y-6">
+        <div className="2xl:col-span-2 space-y-6 lg:space-y-8">
           <Tabs defaultValue="votre-projet" className="w-full">
             <TabsList className="grid w-full grid-cols-2">
               <TabsTrigger value="votre-projet">Votre projet</TabsTrigger>
@@ -1023,7 +1029,7 @@ export default function SimulateurAssuranceVie() {
                     <CardTitle className="text-lg">Évolution du capital</CardTitle>
                   </CardHeader>
                   <CardContent>
-                    <ResponsiveContainer width="100%" height={300}>
+                    <ResponsiveContainer width="100%" height={250} className="min-h-[200px]">
                       <AreaChart data={chartData}>
                         <defs>
                           <linearGradient id="colorBrut" x1="0" y1="0" x2="0" y2="1">
@@ -1062,7 +1068,7 @@ export default function SimulateurAssuranceVie() {
                     <CardTitle className="text-lg">Répartition fiscale finale</CardTitle>
                   </CardHeader>
                   <CardContent>
-                    <ResponsiveContainer width="100%" height={300}>
+                    <ResponsiveContainer width="100%" height={250} className="min-h-[200px]">
                       <PieChart>
                         <Pie
                           data={fiscaliteData}
@@ -1091,7 +1097,7 @@ export default function SimulateurAssuranceVie() {
                     <CardTitle className="text-lg">Intérêts et fiscalité par année</CardTitle>
                   </CardHeader>
                   <CardContent>
-                    <ResponsiveContainer width="100%" height={300}>
+                    <ResponsiveContainer width="100%" height={250} className="min-h-[200px]">
                       <BarChart data={chartData}>
                         <CartesianGrid strokeDasharray="3 3" stroke="#f1f5f9" />
                         <XAxis dataKey="annee" stroke="#64748b" fontSize={12} />
@@ -1120,7 +1126,7 @@ export default function SimulateurAssuranceVie() {
                     <CardTitle className="text-lg">Composition du capital</CardTitle>
                   </CardHeader>
                   <CardContent>
-                    <ResponsiveContainer width="100%" height={300}>
+                    <ResponsiveContainer width="100%" height={250} className="min-h-[200px]">
                       <AreaChart data={composantsData}>
                         <defs>
                           <linearGradient id="colorCapital" x1="0" y1="0" x2="0" y2="1">
@@ -1229,13 +1235,13 @@ export default function SimulateurAssuranceVie() {
         </div>
 
         {/* Panneau de résultats */}
-        <div className="space-y-6">
+        <div className="space-y-6 lg:space-y-8">
           <Card>
             <CardHeader>
               <CardTitle>Résultats</CardTitle>
             </CardHeader>
             <CardContent>
-              <ResponsiveContainer width="100%" height={280}>
+              <ResponsiveContainer width="100%" height={250} className="min-h-[200px]">
                 <LineChart data={chartData}>
                   <defs>
                     <linearGradient id="colorBrutMain" x1="0" y1="0" x2="0" y2="1">
@@ -1314,7 +1320,184 @@ export default function SimulateurAssuranceVie() {
               </div>
             </CardContent>
           </Card>
+
+          {/* Nouvelles analyses graphiques */}
+          <div className="grid grid-cols-1 xl:grid-cols-2 gap-4 lg:gap-6 xl:gap-8">
+            {/* Analyse de performance */}
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <div className="w-3 h-3 bg-gradient-to-r from-purple-500 to-pink-500 rounded-full"></div>
+                  Analyse de Performance
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                <ResponsiveContainer width="100%" height={250} className="min-h-[200px]">
+                  <ComposedChart data={chartData}>
+                    <defs>
+                      <linearGradient id="performanceGradient" x1="0" y1="0" x2="0" y2="1">
+                        <stop offset="5%" stopColor="#8b5cf6" stopOpacity={0.3}/>
+                        <stop offset="95%" stopColor="#8b5cf6" stopOpacity={0}/>
+                      </linearGradient>
+                    </defs>
+                    <CartesianGrid strokeDasharray="3 3" stroke="#f1f5f9" />
+                    <XAxis dataKey="annee" stroke="#64748b" fontSize={11} />
+                    <YAxis yAxisId="left" stroke="#64748b" fontSize={11} />
+                    <YAxis yAxisId="right" orientation="right" stroke="#64748b" fontSize={11} />
+                    <Tooltip
+                      formatter={(value, name) => [`${value.toLocaleString()}€`, name]}
+                      labelFormatter={(label) => `Année ${label}`}
+                      contentStyle={{
+                        backgroundColor: '#ffffff',
+                        border: '1px solid #e2e8f0',
+                        borderRadius: '12px',
+                        boxShadow: '0 10px 15px -3px rgb(0 0 0 / 0.1)'
+                      }}
+                    />
+                    <Area yAxisId="left" type="monotone" dataKey="interets" stackId="1" stroke="#8b5cf6" fill="url(#performanceGradient)" name="Intérêts" />
+                    <Bar yAxisId="right" dataKey="fiscaliteTotale" fill="#ef4444" name="Fiscalité" />
+                  </ComposedChart>
+                </ResponsiveContainer>
+              </CardContent>
+            </Card>
+
+            {/* Analyse des risques */}
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <div className="w-3 h-3 bg-gradient-to-r from-orange-500 to-red-500 rounded-full"></div>
+                  Répartition des Flux
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                <ResponsiveContainer width="100%" height={250} className="min-h-[200px]">
+                  <RadarChart data={[
+                    {
+                      subject: 'Rendement',
+                      A: Math.min(100, ((parseFloat(modalitesGestion.tauxRendementFondsEuros) || 1.2) / 5) * 100),
+                      fullMark: 100
+                    },
+                    {
+                      subject: 'Liquidité',
+                      A: rachats.length > 0 ? 85 : 95,
+                      fullMark: 100
+                    },
+                    {
+                      subject: 'Fiscalité',
+                      A: Math.max(20, 100 - ((projectionsNet.reduce((sum, p) => sum + p.fiscaliteTotale, 0) / Math.max(1, projectionsNet.reduce((sum, p) => sum + p.capitalFin, 0))) * 500)),
+                      fullMark: 100
+                    },
+                    {
+                      subject: 'Diversification',
+                      A: modalitesGestion.unitesCompte || 30,
+                      fullMark: 100
+                    },
+                    {
+                      subject: 'Horizon',
+                      A: Math.min(100, (10 / 30) * 100),
+                      fullMark: 100
+                    }
+                  ]}>
+                    <PolarGrid gridType="polygon" />
+                    <PolarAngleAxis dataKey="subject" tick={{ fontSize: 12, fill: '#64748b' }} />
+                    <PolarRadiusAxis angle={0} domain={[0, 100]} tick={false} />
+                    <Radar
+                      name="Score"
+                      dataKey="A"
+                      stroke="#f97316"
+                      fill="#f97316"
+                      fillOpacity={0.3}
+                      strokeWidth={2}
+                    />
+                  </RadarChart>
+                </ResponsiveContainer>
+                <div className="text-center text-sm text-muted-foreground mt-2">
+                  Évaluation multifactorielle du contrat
+                </div>
+              </CardContent>
+            </Card>
+          </div>
+
+          {/* Indicateurs de performance avancés */}
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <div className="w-3 h-3 bg-gradient-to-r from-emerald-500 to-teal-500 rounded-full"></div>
+                Indicateurs de Performance
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 lg:gap-4">
+                <div className="bg-gradient-to-br from-blue-50 to-blue-100 p-2 sm:p-3 lg:p-4 rounded-lg border border-blue-200">
+                  <div className="text-base sm:text-lg lg:text-xl font-bold text-blue-700">
+                    {((Math.pow((chartData[chartData.length - 1]?.net || 0) / Math.max(1, parseFloat(formData.versementInitial) || 100000), 1 / 10) - 1) * 100).toFixed(2)}%
+                  </div>
+                  <div className="text-xs text-blue-600 mt-1">Rendement annuel moyen</div>
+                </div>
+
+                <div className="bg-gradient-to-br from-green-50 to-green-100 p-2 sm:p-3 lg:p-4 rounded-lg border border-green-200">
+                  <div className="text-base sm:text-lg lg:text-xl font-bold text-green-700">
+                    {((chartData[chartData.length - 1]?.net || 0) / Math.max(1, parseFloat(formData.versementInitial) || 100000) * 100).toFixed(0)}%
+                  </div>
+                  <div className="text-xs text-green-600 mt-1">Rendement total</div>
+                </div>
+
+                <div className="bg-gradient-to-br from-orange-50 to-orange-100 p-2 sm:p-3 lg:p-4 rounded-lg border border-orange-200">
+                  <div className="text-base sm:text-lg lg:text-xl font-bold text-orange-700">
+                    {(((chartData[chartData.length - 1]?.brut || 0) - (chartData[chartData.length - 1]?.net || 0)) / Math.max(1, chartData[chartData.length - 1]?.brut || 0) * 100).toFixed(1)}%
+                  </div>
+                  <div className="text-xs text-orange-600 mt-1">Taux d'imposition effectif</div>
+                </div>
+
+                <div className="bg-gradient-to-br from-purple-50 to-purple-100 p-2 sm:p-3 lg:p-4 rounded-lg border border-purple-200">
+                  <div className="text-base sm:text-lg lg:text-xl font-bold text-purple-700 break-words">
+                    {Math.max(0, chartData[chartData.length - 1]?.net || 0) > (parseFloat(formData.versementInitial) || 100000) ? '+' : ''}{((chartData[chartData.length - 1]?.net || 0) - (parseFloat(formData.versementInitial) || 100000)).toLocaleString()}€
+                  </div>
+                  <div className="text-xs text-purple-600 mt-1">Plus-value nette</div>
+                </div>
+              </div>
+
+              {/* Graphique de comparaison temporelle */}
+              <div className="mt-6">
+                <h4 className="text-lg font-semibold mb-4">Évolution comparative des gains</h4>
+                <ResponsiveContainer width="100%" height={180} className="min-h-[150px]">
+                  <AreaChart data={chartData}>
+                    <defs>
+                      <linearGradient id="gainsBruts" x1="0" y1="0" x2="0" y2="1">
+                        <stop offset="5%" stopColor="#3b82f6" stopOpacity={0.3}/>
+                        <stop offset="95%" stopColor="#3b82f6" stopOpacity={0.1}/>
+                      </linearGradient>
+                      <linearGradient id="gainsNets" x1="0" y1="0" x2="0" y2="1">
+                        <stop offset="5%" stopColor="#10b981" stopOpacity={0.3}/>
+                        <stop offset="95%" stopColor="#10b981" stopOpacity={0.1}/>
+                      </linearGradient>
+                      <linearGradient id="fiscalite" x1="0" y1="0" x2="0" y2="1">
+                        <stop offset="5%" stopColor="#ef4444" stopOpacity={0.3}/>
+                        <stop offset="95%" stopColor="#ef4444" stopOpacity={0.1}/>
+                      </linearGradient>
+                    </defs>
+                    <CartesianGrid strokeDasharray="3 3" stroke="#f1f5f9" />
+                    <XAxis dataKey="annee" stroke="#64748b" fontSize={11} />
+                    <YAxis stroke="#64748b" fontSize={11} tickFormatter={(value) => `${(value / 1000).toFixed(0)}k€`} />
+                    <Tooltip
+                      formatter={(value, name) => [`${value.toLocaleString()}€`, name]}
+                      labelFormatter={(label) => `Année ${label}`}
+                      contentStyle={{
+                        backgroundColor: '#ffffff',
+                        border: '1px solid #e2e8f0',
+                        borderRadius: '12px',
+                        boxShadow: '0 10px 15px -3px rgb(0 0 0 / 0.1)'
+                      }}
+                    />
+                    <Area type="monotone" dataKey="interets" stackId="1" stroke="#10b981" fill="url(#gainsNets)" name="Gains nets" />
+                    <Area type="monotone" dataKey="fiscaliteTotale" stackId="2" stroke="#ef4444" fill="url(#fiscalite)" name="Fiscalité" />
+                  </AreaChart>
+                </ResponsiveContainer>
+              </div>
+            </CardContent>
+          </Card>
         </div>
+      </div>
       </div>
     </div>
   );
