@@ -194,9 +194,123 @@ export default function DossierPatrimoine() {
         </TabsContent>
 
         <TabsContent value="projection">
-          <div className="text-center py-8">
-            <h2 className="text-xl font-semibold mb-4">Projection</h2>
-            <p className="text-muted-foreground">Projections patrimoniales</p>
+          <div className="space-y-6">
+            <div className="flex items-center justify-between">
+              <h2 className="text-xl font-semibold">Projection patrimoniale et budgétaire</h2>
+              <Button variant="outline" size="sm">
+                Exporter vers Excel
+              </Button>
+            </div>
+
+            <div className="text-sm text-muted-foreground flex items-center gap-2">
+              <span>Projection sur 10 ans à partir de 2025</span>
+              <Button variant="ghost" size="sm" className="h-6 w-6 p-0">
+                ✏️
+              </Button>
+            </div>
+
+            <Tabs defaultValue="patrimoine" className="w-full">
+              <TabsList className="grid w-full grid-cols-3">
+                <TabsTrigger value="patrimoine">Patrimoine</TabsTrigger>
+                <TabsTrigger value="budget">Budget</TabsTrigger>
+                <TabsTrigger value="impot">Impôt sur le revenu</TabsTrigger>
+              </TabsList>
+
+              <TabsContent value="patrimoine" className="mt-6">
+                <div className="overflow-x-auto">
+                  <table className="w-full border-collapse">
+                    <thead>
+                      <tr className="border-b">
+                        <th className="text-left p-3 w-16 bg-gray-50">&nbsp;</th>
+                        <th className="text-left p-3 w-24 bg-gray-50">&nbsp;</th>
+                        <th className="text-left p-3 w-48 bg-gray-50">&nbsp;</th>
+                        <th className="text-center p-3 bg-gray-50 border-l">23/09/2025</th>
+                        <th className="text-center p-3 bg-gray-50">2025</th>
+                        <th className="text-center p-3 bg-gray-50">2026</th>
+                        <th className="text-center p-3 bg-gray-50">2027</th>
+                        <th className="text-center p-3 bg-gray-50">2028</th>
+                        <th className="text-center p-3 bg-gray-50">2029</th>
+                        <th className="text-center p-3 bg-gray-50">2030</th>
+                        <th className="text-center p-3 bg-gray-50">2031</th>
+                        <th className="text-center p-3 bg-gray-50">2032</th>
+                        <th className="text-center p-3 bg-gray-50">2033</th>
+                        <th className="text-center p-3 bg-gray-50">2034</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      <tr className="border-b hover:bg-gray-50">
+                        <td className="p-3">
+                          <Button variant="ghost" size="sm" className="h-6 w-6 p-0">
+                            ⊖
+                          </Button>
+                        </td>
+                        <td className="p-3 font-medium">1</td>
+                        <td className="p-3 font-medium">Actifs</td>
+                        <td className="text-center p-3 border-l">8 081 €</td>
+                        <td className="text-center p-3">8 081 €</td>
+                        <td className="text-center p-3">8 081 €</td>
+                        <td className="text-center p-3">8 081 €</td>
+                        <td className="text-center p-3">8 081 €</td>
+                        <td className="text-center p-3">8 081 €</td>
+                        <td className="text-center p-3">8 081 €</td>
+                        <td className="text-center p-3">8 081 €</td>
+                        <td className="text-center p-3">8 081 €</td>
+                        <td className="text-center p-3">8 081 €</td>
+                        <td className="text-center p-3">8 081 €</td>
+                      </tr>
+                      <tr className="border-b hover:bg-gray-50">
+                        <td className="p-3">
+                          <Button variant="ghost" size="sm" className="h-6 w-6 p-0">
+                            ⊕
+                          </Button>
+                        </td>
+                        <td className="p-3">&nbsp;</td>
+                        <td className="p-3 pl-8">Épargne retraite et salariale</td>
+                        <td className="text-center p-3 border-l">8 081 €</td>
+                        <td className="text-center p-3">8 081 €</td>
+                        <td className="text-center p-3">8 081 €</td>
+                        <td className="text-center p-3">8 081 €</td>
+                        <td className="text-center p-3">8 081 €</td>
+                        <td className="text-center p-3">8 081 €</td>
+                        <td className="text-center p-3">8 081 €</td>
+                        <td className="text-center p-3">8 081 €</td>
+                        <td className="text-center p-3">8 081 €</td>
+                        <td className="text-center p-3">8 081 €</td>
+                        <td className="text-center p-3">8 081 €</td>
+                      </tr>
+                      <tr className="border-b hover:bg-gray-50 bg-blue-50">
+                        <td className="p-3">&nbsp;</td>
+                        <td className="p-3">&nbsp;</td>
+                        <td className="p-3 font-medium">Actif net</td>
+                        <td className="text-center p-3 border-l font-medium">8 081 €</td>
+                        <td className="text-center p-3 font-medium">8 081 €</td>
+                        <td className="text-center p-3 font-medium">8 081 €</td>
+                        <td className="text-center p-3 font-medium">8 081 €</td>
+                        <td className="text-center p-3 font-medium">8 081 €</td>
+                        <td className="text-center p-3 font-medium">8 081 €</td>
+                        <td className="text-center p-3 font-medium">8 081 €</td>
+                        <td className="text-center p-3 font-medium">8 081 €</td>
+                        <td className="text-center p-3 font-medium">8 081 €</td>
+                        <td className="text-center p-3 font-medium">8 081 €</td>
+                        <td className="text-center p-3 font-medium">8 081 €</td>
+                      </tr>
+                    </tbody>
+                  </table>
+                </div>
+              </TabsContent>
+
+              <TabsContent value="budget" className="mt-6">
+                <div className="text-center py-8">
+                  <p className="text-muted-foreground">Tableau des projections budgétaires</p>
+                </div>
+              </TabsContent>
+
+              <TabsContent value="impot" className="mt-6">
+                <div className="text-center py-8">
+                  <p className="text-muted-foreground">Tableau des projections d'impôt sur le revenu</p>
+                </div>
+              </TabsContent>
+            </Tabs>
           </div>
         </TabsContent>
       </Tabs>

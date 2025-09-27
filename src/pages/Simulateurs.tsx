@@ -1,5 +1,6 @@
 import { ChevronRight } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
+import { useNavigate } from "react-router-dom";
 
 const simulators = [
   {
@@ -117,6 +118,15 @@ const simulators = [
 ];
 
 export default function Simulateurs() {
+  const navigate = useNavigate();
+
+  const handleSimulatorClick = (simulatorId: number) => {
+    if (simulatorId === 2) { // Simulateur assurance vie
+      navigate("/simulateur-assurance-vie");
+    }
+    // Autres simulateurs à implémenter plus tard
+  };
+
   return (
     <div className="space-y-6">
       <div>
@@ -126,9 +136,10 @@ export default function Simulateurs() {
 
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
         {simulators.map((simulator) => (
-          <Card 
-            key={simulator.id} 
+          <Card
+            key={simulator.id}
             className={`cursor-pointer hover:shadow-md transition-shadow ${simulator.color} border-l-4`}
+            onClick={() => handleSimulatorClick(simulator.id)}
           >
             <CardContent className="p-4">
               <div className="flex items-start justify-between">
