@@ -121,7 +121,9 @@ export default function Simulateurs() {
   const navigate = useNavigate();
 
   const handleSimulatorClick = (simulatorId: number) => {
-    if (simulatorId === 2) { // Simulateur assurance vie
+    if (simulatorId === 1) { // Profil investisseur complet
+      navigate("/simulateur-profil-investisseur");
+    } else if (simulatorId === 2) { // Simulateur assurance vie
       navigate("/simulateur-assurance-vie");
     }
     // Autres simulateurs à implémenter plus tard
