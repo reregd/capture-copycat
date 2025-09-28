@@ -1,11 +1,13 @@
 import { useState } from 'react';
-import { Calendar, Calculator, Home, TrendingUp, FileText, ArrowLeft } from 'lucide-react';
+import { Calendar, Calculator, Home, TrendingUp, FileText, ArrowLeft, Settings, Printer } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
+import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer, PieChart, Pie, Cell } from 'recharts';
 import { useNavigate } from 'react-router-dom';
 
@@ -14,6 +16,14 @@ const SimulateurImmobilier = () => {
   const [activeTab, setActiveTab] = useState('projet');
   const [simulationType, setSimulationType] = useState('complete');
   const [showResults, setShowResults] = useState(false);
+  const [showSettingsModal, setShowSettingsModal] = useState(false);
+
+  // État des paramètres
+  const [settings, setSettings] = useState({
+    effortChoice: 'tresorerie', // 'tresorerie' ou 'epargne'
+    showTRI: 'afficher', // 'afficher' ou 'masquer'
+    showRendement: 'afficher' // 'afficher' ou 'masquer'
+  });
 
   // État du projet
   const [project, setProject] = useState({
@@ -62,21 +72,21 @@ const SimulateurImmobilier = () => {
       startDate: "01/10/2025",
       indexation: 0.00,
       diverseRevenues: 0,
-      diverseRevenuesDate: ""
+      revenuesReceivedOn: ""
     },
     charges: {
       propertyTax: 0,
-      taxIndexation: 0.00,
-      taxStartDate: "01/10/2025",
-      propertyTaxExemption: 0.00,
-      exemptionDuration: 0,
+      propertyTaxIndexation: 0.00,
+      propertyTaxStartDate: "01/10/2025",
+      propertyTaxExemption: false,
       managementFees: 0.00,
+      managementFeesIndexation: 0.00,
       insurancePremiums: 0,
-      insuranceIndexation: 0.00,
+      insurancePremiumsIndexation: 0.00,
       diverseCharges: 0,
       diverseChargesIndexation: 0.00,
       nonDeductibleCharges: 0,
-      nonDeductibleIndexation: 0.00
+      nonDeductibleChargesIndexation: 0.00
     }
   });
 
@@ -175,6 +185,16 @@ const SimulateurImmobilier = () => {
     handleCalculate();
   };
 
+  const handleSaveSettings = () => {
+    // Sauvegarder les paramètres
+    setShowSettingsModal(false);
+  };
+
+  const handleCancelSettings = () => {
+    // Annuler les modifications et fermer le modal
+    setShowSettingsModal(false);
+  };
+
   const addWork = () => {
     setInvestment(prev => ({
       ...prev,
@@ -188,6 +208,16 @@ const SimulateurImmobilier = () => {
       financing: {
         ...prev.financing,
         credits: [...prev.financing.credits, { amount: 0, rate: 0, duration: 0 }]
+      }
+    }));
+  };
+
+  const addSavings = () => {
+    setInvestment(prev => ({
+      ...prev,
+      financing: {
+        ...prev.financing,
+        savings: [...prev.financing.savings, { type: "", amount: 0 }]
       }
     }));
   };
@@ -583,51 +613,80 @@ const SimulateurImmobilier = () => {
                       />
                     </div>
 
-                    <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                      <InputField
-                        label="Durée du projet"
-                        type="number"
-                        value={project.duration}
-                        onChange={(e) => setProject({...project, duration: parseInt(e.target.value) || 0})}
-                      />
-                      <SelectField
-                        label="Unité"
-                        value={project.durationUnit}
-                        onChange={(value) => setProject({...project, durationUnit: value})}
-                        options={[
-                          { value: "ans", label: "ans" },
-                          { value: "mois", label: "mois" }
-                        ]}
-                      />
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      <div className="flex items-end space-x-2">
+                        <InputField
+                          label="Durée du projet"
+                          type="number"
+                          value={project.duration}
+                          onChange={(e) => setProject({...project, duration: parseInt(e.target.value) || 0})}
+                          className="flex-1"
+                        />
+                        <SelectField
+                          label="Unité"
+                          value={project.durationUnit}
+                          onChange={(value) => setProject({...project, durationUnit: value})}
+                          options={[
+                            { value: "ans", label: "ans" },
+                            { value: "mois", label: "mois" }
+                          ]}
+                          className="flex-1"
+                        />
+                      </div>
+                      <div className="flex items-end">
+                        <div className="text-sm text-gray-600 bg-gray-50 p-3 rounded-lg">
+                          <span className="font-medium">Terme au :</span> 31/12/{new Date().getFullYear() + project.duration}
+                        </div>
+                      </div>
                     </div>
 
                     {/* Situation fiscale */}
                     <div className="mt-8">
                       <h3 className="text-lg font-semibold text-gray-800 mb-4">Situation fiscale</h3>
 
-                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                        <SelectField
-                          label="Situation familiale"
-                          value={taxSituation.familyStatus}
-                          onChange={(value) => setTaxSituation({...taxSituation, familyStatus: value})}
-                          options={[
-                            { value: "Marié(e)", label: "Marié(e)" },
-                            { value: "Célibataire", label: "Célibataire" },
-                            { value: "Pacsé(e)", label: "Pacsé(e)" },
-                            { value: "Divorcé(e)", label: "Divorcé(e)" }
-                          ]}
-                        />
+                      {/* Foyer fiscal */}
+                      <div className="mb-6">
+                        <h4 className="text-md font-medium text-gray-700 mb-3">Foyer fiscal</h4>
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                          <SelectField
+                            label="Situation familiale"
+                            value={taxSituation.familyStatus}
+                            onChange={(value) => setTaxSituation({...taxSituation, familyStatus: value})}
+                            options={[
+                              { value: "Marié(e)", label: "Marié(e)" },
+                              { value: "Célibataire", label: "Célibataire" },
+                              { value: "Pacsé(e)", label: "Pacsé(e)" },
+                              { value: "Divorcé(e)", label: "Divorcé(e)" }
+                            ]}
+                          />
 
-                        <SelectField
-                          label="Provenance des revenus"
-                          value={taxSituation.incomeSource}
-                          onChange={(value) => setTaxSituation({...taxSituation, incomeSource: value})}
-                          options={[
-                            { value: "Métropole", label: "Métropole" },
-                            { value: "DOM-TOM", label: "DOM-TOM" },
-                            { value: "Étranger", label: "Étranger" }
-                          ]}
-                        />
+                          <SelectField
+                            label="Provenance des revenus"
+                            value={taxSituation.incomeSource}
+                            onChange={(value) => setTaxSituation({...taxSituation, incomeSource: value})}
+                            options={[
+                              { value: "Métropole", label: "Métropole" },
+                              { value: "DOM-TOM", label: "DOM-TOM" },
+                              { value: "Étranger", label: "Étranger" }
+                            ]}
+                          />
+                        </div>
+                      </div>
+
+                      {/* Revenus préexistants */}
+                      <div className="mb-6">
+                        <h4 className="text-md font-medium text-gray-700 mb-3">Revenus préexistants</h4>
+                        <div className="bg-gray-50 p-4 rounded-lg">
+                          <p className="text-sm text-gray-600">Section à compléter pour les revenus existants</p>
+                        </div>
+                      </div>
+
+                      {/* Déficits fonciers antérieurs */}
+                      <div className="mb-6">
+                        <h4 className="text-md font-medium text-gray-700 mb-3">Déficits fonciers antérieurs</h4>
+                        <div className="bg-gray-50 p-4 rounded-lg">
+                          <p className="text-sm text-gray-600">Section à compléter pour les déficits antérieurs</p>
+                        </div>
                       </div>
 
                       <div className="mt-4 space-y-4">
@@ -710,7 +769,7 @@ const SimulateurImmobilier = () => {
                         />
 
                         <InputField
-                          label="Vendu le"
+                          label="Versés le"
                           type="date"
                           value={investment.saleDate.split('/').reverse().join('-')}
                           onChange={(e) => setInvestment({...investment, saleDate: e.target.value.split('-').reverse().join('/')})}
@@ -782,18 +841,11 @@ const SimulateurImmobilier = () => {
                     <div>
                       <h3 className="text-lg font-semibold text-gray-800 mb-4">Financement</h3>
 
-                      <InputField
-                        label="Apport Personnel (€)"
-                        type="number"
-                        value={investment.financing.personalContribution}
-                        onChange={(e) => setInvestment({
-                          ...investment,
-                          financing: {
-                            ...investment.financing,
-                            personalContribution: parseFloat(e.target.value) || 0
-                          }
-                        })}
-                      />
+                      <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-6">
+                        <p className="text-sm text-blue-800">
+                          <span className="font-medium">Apport Personnel :</span> cliquer sur le bouton "Calculer" pour afficher le montant de l'apport personnel
+                        </p>
+                      </div>
 
                       <div className="mt-6">
                         <div className="flex justify-between items-center mb-4">
@@ -852,6 +904,74 @@ const SimulateurImmobilier = () => {
                           </div>
                         ))}
                       </div>
+
+                      <div className="mt-6">
+                        <div className="flex justify-between items-center mb-4">
+                          <h4 className="text-md font-medium text-gray-700">Épargne</h4>
+                          <Button
+                            onClick={addSavings}
+                            variant="outline"
+                            size="sm"
+                          >
+                            Ajouter une épargne
+                          </Button>
+                        </div>
+
+                        {investment.financing.savings && investment.financing.savings.map((saving, index) => (
+                          <div key={index} className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4 p-4 bg-gray-50 rounded">
+                            <SelectField
+                              label="Type"
+                              value={saving.type}
+                              onChange={(value) => {
+                                const newSavings = [...investment.financing.savings];
+                                newSavings[index].type = value;
+                                setInvestment({
+                                  ...investment,
+                                  financing: {...investment.financing, savings: newSavings}
+                                });
+                              }}
+                              options={[
+                                { value: "", label: "Sélectionner" },
+                                { value: "PEL", label: "PEL" },
+                                { value: "CEL", label: "CEL" },
+                                { value: "Livret A", label: "Livret A" }
+                              ]}
+                            />
+                            <InputField
+                              label="Montant (€)"
+                              type="number"
+                              value={saving.amount}
+                              onChange={(e) => {
+                                const newSavings = [...investment.financing.savings];
+                                newSavings[index].amount = parseFloat(e.target.value) || 0;
+                                setInvestment({
+                                  ...investment,
+                                  financing: {...investment.financing, savings: newSavings}
+                                });
+                              }}
+                            />
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+
+                    {/* Cession */}
+                    <div>
+                      <h3 className="text-lg font-semibold text-gray-800 mb-4">Cession</h3>
+                      <div className="bg-gray-50 border border-gray-200 rounded-lg p-4">
+                        <label className="flex items-center">
+                          <input
+                            type="checkbox"
+                            checked={investment.cession.soldAtEnd}
+                            onChange={(e) => setInvestment({
+                              ...investment,
+                              cession: {...investment.cession, soldAtEnd: e.target.checked}
+                            })}
+                            className="mr-3"
+                          />
+                          <span className="text-gray-700">Le bien est cédé au terme de l'opération</span>
+                        </label>
+                      </div>
                     </div>
                   </CardContent>
                 </Card>
@@ -872,10 +992,10 @@ const SimulateurImmobilier = () => {
                   <CardContent className="space-y-8">
                     {/* Section Revenus */}
                     <div>
-                      <h3 className="text-lg font-semibold text-gray-800 mb-4">Revenus locatifs</h3>
+                      <h3 className="text-lg font-semibold text-gray-800 mb-4">Revenus</h3>
                       <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                         <InputField
-                          label="Loyer mensuel (€)"
+                          label="Loyers (€)"
                           type="number"
                           value={revenuesCharges.revenues.rent}
                           onChange={(e) => setRevenuesCharges({
@@ -884,20 +1004,20 @@ const SimulateurImmobilier = () => {
                           })}
                         />
                         <SelectField
-                          label="Période"
+                          label="Par"
                           value={revenuesCharges.revenues.period}
                           onChange={(value) => setRevenuesCharges({
                             ...revenuesCharges,
                             revenues: {...revenuesCharges.revenues, period: value}
                           })}
                           options={[
-                            { value: "Mois", label: "Mensuel" },
-                            { value: "Trimestre", label: "Trimestriel" },
-                            { value: "Année", label: "Annuel" }
+                            { value: "Mois", label: "Mois" },
+                            { value: "Trimestre", label: "Trimestre" },
+                            { value: "Année", label: "Année" }
                           ]}
                         />
                         <InputField
-                          label="Indexation (%/an)"
+                          label="Indexation annuelle (%)"
                           type="number"
                           step="0.01"
                           value={revenuesCharges.revenues.indexation}
@@ -907,49 +1027,193 @@ const SimulateurImmobilier = () => {
                           })}
                         />
                       </div>
+                      <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mt-4">
+                        <InputField
+                          label="Date de début"
+                          type="date"
+                          value={revenuesCharges.revenues.startDate.split('/').reverse().join('-')}
+                          onChange={(e) => setRevenuesCharges({
+                            ...revenuesCharges,
+                            revenues: {...revenuesCharges.revenues, startDate: e.target.value.split('-').reverse().join('/')}
+                          })}
+                        />
+                        <InputField
+                          label="Recettes diverses (€)"
+                          type="number"
+                          value={revenuesCharges.revenues.diverseRevenues}
+                          onChange={(e) => setRevenuesCharges({
+                            ...revenuesCharges,
+                            revenues: {...revenuesCharges.revenues, diverseRevenues: parseFloat(e.target.value) || 0}
+                          })}
+                        />
+                        <InputField
+                          label="Recettes perçues le"
+                          type="date"
+                          value={revenuesCharges.revenues.revenuesReceivedOn}
+                          onChange={(e) => setRevenuesCharges({
+                            ...revenuesCharges,
+                            revenues: {...revenuesCharges.revenues, revenuesReceivedOn: e.target.value}
+                          })}
+                        />
+                      </div>
                     </div>
 
-                    {/* Section Charges */}
+                    {/* Section Charges annuelles */}
                     <div>
-                      <h3 className="text-lg font-semibold text-gray-800 mb-4">Charges</h3>
-                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                        <InputField
-                          label="Taxe foncière (€/an)"
-                          type="number"
-                          value={revenuesCharges.charges.propertyTax}
-                          onChange={(e) => setRevenuesCharges({
-                            ...revenuesCharges,
-                            charges: {...revenuesCharges.charges, propertyTax: parseFloat(e.target.value) || 0}
-                          })}
-                        />
-                        <InputField
-                          label="Frais de gestion (%)"
-                          type="number"
-                          step="0.01"
-                          value={revenuesCharges.charges.managementFees}
-                          onChange={(e) => setRevenuesCharges({
-                            ...revenuesCharges,
-                            charges: {...revenuesCharges.charges, managementFees: parseFloat(e.target.value) || 0}
-                          })}
-                        />
-                        <InputField
-                          label="Assurances (€/an)"
-                          type="number"
-                          value={revenuesCharges.charges.insurancePremiums}
-                          onChange={(e) => setRevenuesCharges({
-                            ...revenuesCharges,
-                            charges: {...revenuesCharges.charges, insurancePremiums: parseFloat(e.target.value) || 0}
-                          })}
-                        />
-                        <InputField
-                          label="Charges diverses (€/an)"
-                          type="number"
-                          value={revenuesCharges.charges.diverseCharges}
-                          onChange={(e) => setRevenuesCharges({
-                            ...revenuesCharges,
-                            charges: {...revenuesCharges.charges, diverseCharges: parseFloat(e.target.value) || 0}
-                          })}
-                        />
+                      <h3 className="text-lg font-semibold text-gray-800 mb-4">Charges annuelles</h3>
+
+                      {/* Taxes foncières */}
+                      <div className="mb-6">
+                        <h4 className="text-md font-medium text-gray-700 mb-3">Taxes foncières</h4>
+                        <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+                          <InputField
+                            label="Taxes foncières (€)"
+                            type="number"
+                            value={revenuesCharges.charges.propertyTax}
+                            onChange={(e) => setRevenuesCharges({
+                              ...revenuesCharges,
+                              charges: {...revenuesCharges.charges, propertyTax: parseFloat(e.target.value) || 0}
+                            })}
+                          />
+                          <InputField
+                            label="Indexation (%)"
+                            type="number"
+                            step="0.01"
+                            value={revenuesCharges.charges.propertyTaxIndexation}
+                            onChange={(e) => setRevenuesCharges({
+                              ...revenuesCharges,
+                              charges: {...revenuesCharges.charges, propertyTaxIndexation: parseFloat(e.target.value) || 0}
+                            })}
+                          />
+                          <InputField
+                            label="Date de début"
+                            type="date"
+                            value={revenuesCharges.charges.propertyTaxStartDate.split('/').reverse().join('-')}
+                            onChange={(e) => setRevenuesCharges({
+                              ...revenuesCharges,
+                              charges: {...revenuesCharges.charges, propertyTaxStartDate: e.target.value.split('-').reverse().join('/')}
+                            })}
+                          />
+                          <div className="flex items-center mt-6">
+                            <label className="flex items-center">
+                              <input
+                                type="checkbox"
+                                checked={revenuesCharges.charges.propertyTaxExemption}
+                                onChange={(e) => setRevenuesCharges({
+                                  ...revenuesCharges,
+                                  charges: {...revenuesCharges.charges, propertyTaxExemption: e.target.checked}
+                                })}
+                                className="mr-2"
+                              />
+                              <span className="text-sm text-gray-700">Exonération taxes foncières</span>
+                            </label>
+                          </div>
+                        </div>
+                      </div>
+
+                      {/* Frais de gestion */}
+                      <div className="mb-6">
+                        <h4 className="text-md font-medium text-gray-700 mb-3">Frais de gestion</h4>
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                          <InputField
+                            label="Frais de gestion (%)"
+                            type="number"
+                            step="0.01"
+                            value={revenuesCharges.charges.managementFees}
+                            onChange={(e) => setRevenuesCharges({
+                              ...revenuesCharges,
+                              charges: {...revenuesCharges.charges, managementFees: parseFloat(e.target.value) || 0}
+                            })}
+                          />
+                          <InputField
+                            label="Indexation (%)"
+                            type="number"
+                            step="0.01"
+                            value={revenuesCharges.charges.managementFeesIndexation}
+                            onChange={(e) => setRevenuesCharges({
+                              ...revenuesCharges,
+                              charges: {...revenuesCharges.charges, managementFeesIndexation: parseFloat(e.target.value) || 0}
+                            })}
+                          />
+                        </div>
+                      </div>
+
+                      {/* Primes d'assurance */}
+                      <div className="mb-6">
+                        <h4 className="text-md font-medium text-gray-700 mb-3">Primes d'assurance</h4>
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                          <InputField
+                            label="Primes d'assurance (€)"
+                            type="number"
+                            value={revenuesCharges.charges.insurancePremiums}
+                            onChange={(e) => setRevenuesCharges({
+                              ...revenuesCharges,
+                              charges: {...revenuesCharges.charges, insurancePremiums: parseFloat(e.target.value) || 0}
+                            })}
+                          />
+                          <InputField
+                            label="Indexation (%)"
+                            type="number"
+                            step="0.01"
+                            value={revenuesCharges.charges.insurancePremiumsIndexation}
+                            onChange={(e) => setRevenuesCharges({
+                              ...revenuesCharges,
+                              charges: {...revenuesCharges.charges, insurancePremiumsIndexation: parseFloat(e.target.value) || 0}
+                            })}
+                          />
+                        </div>
+                      </div>
+
+                      {/* Charges diverses */}
+                      <div className="mb-6">
+                        <h4 className="text-md font-medium text-gray-700 mb-3">Charges diverses</h4>
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                          <InputField
+                            label="Charges diverses (€)"
+                            type="number"
+                            value={revenuesCharges.charges.diverseCharges}
+                            onChange={(e) => setRevenuesCharges({
+                              ...revenuesCharges,
+                              charges: {...revenuesCharges.charges, diverseCharges: parseFloat(e.target.value) || 0}
+                            })}
+                          />
+                          <InputField
+                            label="Indexation (%)"
+                            type="number"
+                            step="0.01"
+                            value={revenuesCharges.charges.diverseChargesIndexation}
+                            onChange={(e) => setRevenuesCharges({
+                              ...revenuesCharges,
+                              charges: {...revenuesCharges.charges, diverseChargesIndexation: parseFloat(e.target.value) || 0}
+                            })}
+                          />
+                        </div>
+                      </div>
+
+                      {/* Charges non déductibles */}
+                      <div>
+                        <h4 className="text-md font-medium text-gray-700 mb-3">Charges non déductibles</h4>
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                          <InputField
+                            label="Charges non déductibles (€)"
+                            type="number"
+                            value={revenuesCharges.charges.nonDeductibleCharges}
+                            onChange={(e) => setRevenuesCharges({
+                              ...revenuesCharges,
+                              charges: {...revenuesCharges.charges, nonDeductibleCharges: parseFloat(e.target.value) || 0}
+                            })}
+                          />
+                          <InputField
+                            label="Indexation (%)"
+                            type="number"
+                            step="0.01"
+                            value={revenuesCharges.charges.nonDeductibleChargesIndexation}
+                            onChange={(e) => setRevenuesCharges({
+                              ...revenuesCharges,
+                              charges: {...revenuesCharges.charges, nonDeductibleChargesIndexation: parseFloat(e.target.value) || 0}
+                            })}
+                          />
+                        </div>
                       </div>
                     </div>
                   </CardContent>
@@ -977,6 +1241,28 @@ const SimulateurImmobilier = () => {
           </div>
         </div>
 
+        {/* Footer informatif */}
+        <div className="mt-8 bg-white rounded-lg shadow-sm border-t-4 border-blue-500 p-6">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center space-x-4">
+              <div className="text-gray-600">
+                <p className="text-sm font-medium">Simulation non contractuelle</p>
+                <p className="text-xs text-gray-500">{new Date().toLocaleDateString('fr-FR')}</p>
+              </div>
+            </div>
+            <div className="flex items-center space-x-3">
+              <Button variant="outline" size="sm" onClick={() => setShowSettingsModal(true)}>
+                <Settings className="h-4 w-4 mr-2" />
+                Paramètres
+              </Button>
+              <Button variant="outline" size="sm">
+                <Printer className="h-4 w-4 mr-2" />
+                Imprimer
+              </Button>
+            </div>
+          </div>
+        </div>
+
         {/* Bouton de calcul flottant */}
         <div className="fixed bottom-6 right-6 z-50">
           <Button
@@ -988,6 +1274,96 @@ const SimulateurImmobilier = () => {
             <span className="font-semibold">Calculer</span>
           </Button>
         </div>
+
+        {/* Modal des paramètres */}
+        <Dialog open={showSettingsModal} onOpenChange={setShowSettingsModal}>
+          <DialogContent className="sm:max-w-[425px]">
+            <DialogHeader>
+              <DialogTitle className="text-lg font-semibold">Paramètres</DialogTitle>
+              <p className="text-sm text-gray-600 mt-2">
+                Vos préférences seront appliquées à cette simulation immobilière.
+              </p>
+            </DialogHeader>
+
+            <div className="space-y-6 py-4">
+              {/* Choix de l'effort mensuel moyen */}
+              <div>
+                <h4 className="text-sm font-medium text-gray-900 mb-3">
+                  Choix de l'effort mensuel moyen
+                </h4>
+                <RadioGroup
+                  value={settings.effortChoice}
+                  onValueChange={(value) => setSettings({...settings, effortChoice: value})}
+                  className="space-y-2"
+                >
+                  <div className="flex items-center space-x-2">
+                    <RadioGroupItem value="tresorerie" id="tresorerie" />
+                    <Label htmlFor="tresorerie" className="text-sm">
+                      Effort de trésorerie mensuel moyen
+                    </Label>
+                  </div>
+                  <div className="flex items-center space-x-2">
+                    <RadioGroupItem value="epargne" id="epargne" />
+                    <Label htmlFor="epargne" className="text-sm">
+                      Effort d'épargne mensuel moyen
+                    </Label>
+                  </div>
+                </RadioGroup>
+              </div>
+
+              {/* TRI dans les éditions et les résultats */}
+              <div>
+                <h4 className="text-sm font-medium text-gray-900 mb-3">
+                  TRI dans les éditions et les résultats
+                </h4>
+                <RadioGroup
+                  value={settings.showTRI}
+                  onValueChange={(value) => setSettings({...settings, showTRI: value})}
+                  className="space-y-2"
+                >
+                  <div className="flex items-center space-x-2">
+                    <RadioGroupItem value="afficher" id="tri-afficher" />
+                    <Label htmlFor="tri-afficher" className="text-sm">Afficher</Label>
+                  </div>
+                  <div className="flex items-center space-x-2">
+                    <RadioGroupItem value="masquer" id="tri-masquer" />
+                    <Label htmlFor="tri-masquer" className="text-sm">Masquer</Label>
+                  </div>
+                </RadioGroup>
+              </div>
+
+              {/* Rendement locatif dans les éditions */}
+              <div>
+                <h4 className="text-sm font-medium text-gray-900 mb-3">
+                  Rendement locatif dans les éditions
+                </h4>
+                <RadioGroup
+                  value={settings.showRendement}
+                  onValueChange={(value) => setSettings({...settings, showRendement: value})}
+                  className="space-y-2"
+                >
+                  <div className="flex items-center space-x-2">
+                    <RadioGroupItem value="afficher" id="rendement-afficher" />
+                    <Label htmlFor="rendement-afficher" className="text-sm">Afficher</Label>
+                  </div>
+                  <div className="flex items-center space-x-2">
+                    <RadioGroupItem value="masquer" id="rendement-masquer" />
+                    <Label htmlFor="rendement-masquer" className="text-sm">Masquer</Label>
+                  </div>
+                </RadioGroup>
+              </div>
+            </div>
+
+            <DialogFooter className="flex justify-end space-x-2">
+              <Button variant="outline" onClick={handleCancelSettings}>
+                Annuler
+              </Button>
+              <Button onClick={handleSaveSettings}>
+                Valider
+              </Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
       </div>
     </div>
   );
