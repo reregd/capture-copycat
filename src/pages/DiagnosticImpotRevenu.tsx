@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Calculator, FileText, TrendingDown, ArrowLeft, Plus, Trash2 } from "lucide-react";
+import { Calculator, FileText, TrendingDown, ArrowLeft, Plus, Trash2, Info, CheckCircle, X } from "lucide-react";
 import { useNavigate } from 'react-router-dom';
 import { PieChart, Pie, Cell, ResponsiveContainer, BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend } from 'recharts';
 
@@ -48,6 +48,10 @@ const DiagnosticImpotRevenu = () => {
   const [activeTab, setActiveTab] = useState('situation');
   const [showResults, setShowResults] = useState(false);
   const [results, setResults] = useState(null);
+  const [currentYear, setCurrentYear] = useState(2024);
+  const [compareYear, setCompareYear] = useState(2023);
+  const [showComparison, setShowComparison] = useState(false);
+  const [selectedDevices, setSelectedDevices] = useState([]);
 
   // État situation fiscale
   const [situation, setSituation] = useState({
@@ -95,24 +99,96 @@ const DiagnosticImpotRevenu = () => {
     setCharges(newCharges);
   };
 
-  // Barème impôt 2024 (célibataire)
-  const calculateImpot = (revenuImposable, nbParts) => {
+  // Barèmes d'impôts par année
+  const taxBrackets = {
+    2024: [
+      { min: 0, max: 10777, rate: 0, label: "0%" },
+      { min: 10777, max: 27478, rate: 11, label: "11%" },
+      { min: 27478, max: 78570, rate: 30, label: "30%" },
+      { min: 78570, max: 168994, rate: 41, label: "41%" },
+      { min: 168994, max: Infinity, rate: 45, label: "45%" }
+    ],
+    2023: [
+      { min: 0, max: 10225, rate: 0, label: "0%" },
+      { min: 10225, max: 26070, rate: 11, label: "11%" },
+      { min: 26070, max: 74545, rate: 30, label: "30%" },
+      { min: 74545, max: 160336, rate: 41, label: "41%" },
+      { min: 160336, max: Infinity, rate: 45, label: "45%" }
+    ]
+  };
+
+  // Dispositifs fiscaux disponibles
+  const fiscalDevices = [
+    {
+      id: 'per',
+      name: 'Plan Épargne Retraite (PER)',
+      description: 'Déduction fiscale sur les versements',
+      maxAmount: 32909,
+      reductionRate: 'TMI'
+    },
+    {
+      id: 'deficitFoncier',
+      name: 'Déficit foncier',
+      description: 'Imputation des déficits fonciers',
+      maxAmount: 10700,
+      reductionRate: 'TMI'
+    },
+    {
+      id: 'dons',
+      name: 'Dons aux associations',
+      description: 'Réduction d\'impôt de 66%',
+      maxAmount: 20000,
+      reductionRate: 66
+    },
+    {
+      id: 'emploiDomicile',
+      name: 'Emploi à domicile',
+      description: 'Crédit d\'impôt de 50%',
+      maxAmount: 12000,
+      reductionRate: 50
+    },
+    {
+      id: 'investissement',
+      name: 'Investissement locatif',
+      description: 'Dispositif Pinel/Denormandie',
+      maxAmount: 300000,
+      reductionRate: 12
+    },
+    {
+      id: 'fcpi',
+      name: 'FCPI/FIP',
+      description: 'Réduction d\'impôt de 18%',
+      maxAmount: 12000,
+      reductionRate: 18
+    }
+  ];
+
+  // Calcul impôt avec barème dynamique
+  const calculateImpot = (revenuImposable, nbParts, year = 2024) => {
+    const brackets = taxBrackets[year];
     const quotientFamilial = revenuImposable / nbParts;
     let impot = 0;
 
-    if (quotientFamilial <= 10777) {
-      impot = 0;
-    } else if (quotientFamilial <= 27478) {
-      impot = (quotientFamilial - 10777) * 0.11;
-    } else if (quotientFamilial <= 78570) {
-      impot = (27478 - 10777) * 0.11 + (quotientFamilial - 27478) * 0.30;
-    } else if (quotientFamilial <= 168994) {
-      impot = (27478 - 10777) * 0.11 + (78570 - 27478) * 0.30 + (quotientFamilial - 78570) * 0.41;
-    } else {
-      impot = (27478 - 10777) * 0.11 + (78570 - 27478) * 0.30 + (168994 - 78570) * 0.41 + (quotientFamilial - 168994) * 0.45;
+    for (let i = 0; i < brackets.length; i++) {
+      const bracket = brackets[i];
+      if (quotientFamilial > bracket.min) {
+        const taxableInBracket = Math.min(quotientFamilial, bracket.max) - bracket.min;
+        impot += taxableInBracket * (bracket.rate / 100);
+      }
     }
 
     return Math.max(0, impot * nbParts);
+  };
+
+  // Calcul du taux marginal
+  const calculateMarginalRate = (revenuImposable, year = 2024) => {
+    const brackets = taxBrackets[year];
+    for (let i = brackets.length - 1; i >= 0; i--) {
+      if (revenuImposable > brackets[i].min) {
+        return brackets[i].rate;
+      }
+    }
+    return 0;
   };
 
   const calculateNbParts = () => {
@@ -131,17 +207,30 @@ const DiagnosticImpotRevenu = () => {
     const revenuImposable = Math.max(0, totalRevenus - totalCharges);
 
     const nbParts = calculateNbParts();
-    const impotBrut = calculateImpot(revenuImposable, nbParts);
+    const impotBrut = calculateImpot(revenuImposable, nbParts, currentYear);
 
     // Décote pour les revenus modestes
     const plafondDecote = situation.situationFamiliale === "Marié(e)" || situation.situationFamiliale === "Pacsé(e)" ? 2906 : 1746;
     const decote = impotBrut < plafondDecote ? Math.max(0, plafondDecote - impotBrut) : 0;
 
     const impotNet = Math.max(0, impotBrut - decote);
-    const tauxMarginal = revenuImposable <= 10777 ? 0 :
-                        revenuImposable <= 27478 ? 11 :
-                        revenuImposable <= 78570 ? 30 :
-                        revenuImposable <= 168994 ? 41 : 45;
+    const tauxMarginal = calculateMarginalRate(revenuImposable, currentYear);
+
+    // Simulation des tranches d'imposition
+    const tranchesSimulation = taxBrackets[currentYear].map(bracket => {
+      const quotientFamilial = revenuImposable / nbParts;
+      const isInBracket = quotientFamilial > bracket.min && quotientFamilial <= bracket.max;
+      const taxableInBracket = isInBracket ?
+        Math.min(quotientFamilial, bracket.max) - bracket.min :
+        quotientFamilial > bracket.max ? bracket.max - bracket.min : 0;
+
+      return {
+        ...bracket,
+        isActive: isInBracket,
+        taxableAmount: taxableInBracket * nbParts,
+        taxOwed: taxableInBracket * (bracket.rate / 100) * nbParts
+      };
+    });
 
     // Calcul des optimisations
     const optimisationsCalculees = optimisations.map(opt => {
@@ -177,6 +266,21 @@ const DiagnosticImpotRevenu = () => {
       { name: 'Autres', value: revenus.autresRevenus + revenus.beneficesCommerce + revenus.beneficesAgricoles + revenus.plusValues, fill: '#ef4444' }
     ].filter(item => item.value > 0);
 
+    // Calcul de comparaison avec l'année précédente si demandé
+    let comparison = null;
+    if (showComparison) {
+      const impotBrutPrecedent = calculateImpot(revenuImposable, nbParts, compareYear);
+      const decotePrecedente = impotBrutPrecedent < plafondDecote ? Math.max(0, plafondDecote - impotBrutPrecedent) : 0;
+      const impotNetPrecedent = Math.max(0, impotBrutPrecedent - decotePrecedente);
+
+      comparison = {
+        year: compareYear,
+        impotNet: Math.round(impotNetPrecedent),
+        difference: Math.round(impotNet - impotNetPrecedent),
+        percentage: impotNetPrecedent > 0 ? Math.round(((impotNet - impotNetPrecedent) / impotNetPrecedent) * 100) : 0
+      };
+    }
+
     return {
       totalRevenus: Math.round(totalRevenus),
       totalCharges: Math.round(totalCharges),
@@ -190,7 +294,10 @@ const DiagnosticImpotRevenu = () => {
       optimisationsCalculees,
       totalEconomies: Math.round(totalEconomies),
       impotOptimise: Math.round(Math.max(0, impotNet - totalEconomies)),
-      repartitionRevenus
+      repartitionRevenus,
+      tranchesSimulation,
+      comparison,
+      currentYear
     };
   };
 
@@ -202,22 +309,126 @@ const DiagnosticImpotRevenu = () => {
 
   if (showResults && results) {
     return (
-      <div className="space-y-6">
-        <div className="flex items-center gap-4">
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={() => setShowResults(false)}
-            className="flex items-center gap-2"
-          >
-            <ArrowLeft className="h-4 w-4" />
-            Retour au diagnostic
-          </Button>
-          <div>
-            <h1 className="text-2xl font-bold text-foreground">Diagnostic Impôt sur le Revenu</h1>
-            <p className="text-muted-foreground">Calcul rapide de votre impôt et optimisations</p>
+      <div className="space-y-6" style={{ fontFamily: 'Arial, sans-serif', maxWidth: '1200px', margin: '0 auto', padding: '20px', color: '#333' }}>
+        {/* Header avec style amélioré */}
+        <div style={{ borderBottom: '1px solid #ddd', paddingBottom: '10px', marginBottom: '20px' }}>
+          <div className="flex items-center gap-4">
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => setShowResults(false)}
+              className="flex items-center gap-2"
+            >
+              <ArrowLeft className="h-4 w-4" />
+              Retour au diagnostic
+            </Button>
+            <div>
+              <h1 style={{ margin: '0', fontSize: '24px' }}>Diagnostic Impôt sur le Revenu</h1>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: '10px' }}>
+                <h2 style={{ margin: '0', fontSize: '18px' }}>Année {results.currentYear}</h2>
+                <div style={{ color: '#007bff', fontWeight: 'bold' }}>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => setShowComparison(!showComparison)}
+                    className="flex items-center gap-2"
+                  >
+                    <Info className="h-4 w-4" />
+                    {showComparison ? 'Masquer' : 'Afficher'} la comparaison
+                  </Button>
+                </div>
+              </div>
+            </div>
           </div>
         </div>
+
+        {/* Section des éléments d'imposition */}
+        <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '20px' }}>
+          <div style={{ display: 'flex', flexDirection: 'column' }}>
+            <span>Revenu imposable</span>
+            <span style={{ fontWeight: 'bold', fontSize: '18px' }}>{results.revenuImposable.toLocaleString()} €</span>
+          </div>
+          <div style={{ display: 'flex', flexDirection: 'column' }}>
+            <span>Nombre de parts</span>
+            <span style={{ fontWeight: 'bold', fontSize: '18px' }}>{results.nbParts}</span>
+          </div>
+          <div style={{ display: 'flex', flexDirection: 'column' }}>
+            <span>Taux marginal</span>
+            <span style={{ fontWeight: 'bold', fontSize: '18px' }}>{results.tauxMarginal}%</span>
+          </div>
+          <div style={{ display: 'flex', flexDirection: 'column' }}>
+            <span>Impôt calculé</span>
+            <span style={{ fontWeight: 'bold', fontSize: '18px', color: results.impotNet > 0 ? '#dc2626' : '#16a34a' }}>
+              {results.impotNet.toLocaleString()} €
+            </span>
+          </div>
+        </div>
+
+        {/* Tableau des tranches d'imposition */}
+        <div style={{ marginBottom: '30px' }}>
+          <h3 style={{ fontSize: '18px', marginBottom: '15px', borderBottom: '1px solid #eee', paddingBottom: '5px' }}>
+            Simulation par tranches d'imposition
+          </h3>
+          <table style={{ width: '100%', borderCollapse: 'collapse', marginBottom: '20px' }}>
+            <thead>
+              <tr>
+                <th style={{ border: '1px solid #ddd', padding: '8px', textAlign: 'left', backgroundColor: '#f8f9fa' }}>Tranche</th>
+                <th style={{ border: '1px solid #ddd', padding: '8px', textAlign: 'left', backgroundColor: '#f8f9fa' }}>Taux</th>
+                <th style={{ border: '1px solid #ddd', padding: '8px', textAlign: 'left', backgroundColor: '#f8f9fa' }}>Montant imposable</th>
+                <th style={{ border: '1px solid #ddd', padding: '8px', textAlign: 'left', backgroundColor: '#f8f9fa' }}>Impôt dû</th>
+              </tr>
+            </thead>
+            <tbody>
+              {results.tranchesSimulation.map((tranche, index) => (
+                <tr key={index} style={{ backgroundColor: tranche.isActive ? '#e8f5e8' : 'transparent' }}>
+                  <td style={{ border: '1px solid #ddd', padding: '8px' }}>
+                    {index === 0 ?
+                      `Jusqu'à ${tranche.max.toLocaleString()} €` :
+                      index === results.tranchesSimulation.length - 1 ?
+                      `Au-delà de ${tranche.min.toLocaleString()} €` :
+                      `De ${tranche.min.toLocaleString()} € à ${tranche.max.toLocaleString()} €`
+                    }
+                    {tranche.isActive && <span style={{ color: 'green', fontWeight: 'bold', marginLeft: '8px' }}>✓</span>}
+                  </td>
+                  <td style={{ border: '1px solid #ddd', padding: '8px' }}>{tranche.label}</td>
+                  <td style={{ border: '1px solid #ddd', padding: '8px' }}>
+                    {tranche.taxableAmount > 0 ? `${Math.round(tranche.taxableAmount).toLocaleString()} €` : '-'}
+                  </td>
+                  <td style={{ border: '1px solid #ddd', padding: '8px' }}>
+                    {tranche.taxOwed > 0 ? `${Math.round(tranche.taxOwed).toLocaleString()} €` : '-'}
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+
+        {/* Comparaison avec année précédente */}
+        {showComparison && results.comparison && (
+          <div style={{ marginBottom: '15px' }}>
+            <h4 style={{ fontSize: '16px', marginBottom: '15px' }}>Comparaison {results.comparison.year} vs {results.currentYear}</h4>
+            <div style={{ display: 'flex', justifyContent: 'space-around', margin: '20px 0' }}>
+              <div style={{ textAlign: 'center' }}>
+                <div style={{ fontSize: '18px', fontWeight: 'bold' }}>{results.comparison.impotNet.toLocaleString()} €</div>
+                <div>Impôt {results.comparison.year}</div>
+              </div>
+              <div style={{ textAlign: 'center' }}>
+                <div style={{ fontSize: '18px', fontWeight: 'bold' }}>{results.impotNet.toLocaleString()} €</div>
+                <div>Impôt {results.currentYear}</div>
+              </div>
+              <div style={{ textAlign: 'center' }}>
+                <div style={{
+                  fontSize: '18px',
+                  fontWeight: 'bold',
+                  color: results.comparison.difference > 0 ? '#dc2626' : '#16a34a'
+                }}>
+                  {results.comparison.difference > 0 ? '+' : ''}{results.comparison.difference.toLocaleString()} €
+                </div>
+                <div>Différence ({results.comparison.percentage > 0 ? '+' : ''}{results.comparison.percentage}%)</div>
+              </div>
+            </div>
+          </div>
+        )}
 
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
           {/* Résultats principaux */}
@@ -325,6 +536,172 @@ const DiagnosticImpotRevenu = () => {
               </div>
             </CardContent>
           </Card>
+        </div>
+
+        {/* Section dispositifs fiscaux */}
+        <div style={{ marginTop: '20px' }}>
+          <h3 style={{ fontSize: '18px', marginBottom: '15px', borderBottom: '1px solid #eee', paddingBottom: '5px' }}>
+            Dispositifs fiscaux disponibles
+          </h3>
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))', gap: '15px' }}>
+            {fiscalDevices.map((device) => (
+              <div
+                key={device.id}
+                style={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  padding: '10px',
+                  border: '1px solid #eee',
+                  borderRadius: '4px',
+                  cursor: 'pointer',
+                  backgroundColor: selectedDevices.includes(device.id) ? '#e8f5e8' : 'white'
+                }}
+                onClick={() => {
+                  if (selectedDevices.includes(device.id)) {
+                    setSelectedDevices(selectedDevices.filter(id => id !== device.id));
+                  } else {
+                    setSelectedDevices([...selectedDevices, device.id]);
+                  }
+                }}
+              >
+                <input
+                  type="checkbox"
+                  checked={selectedDevices.includes(device.id)}
+                  onChange={() => {}}
+                  style={{ marginRight: '10px' }}
+                />
+                <div style={{ flexGrow: 1 }}>
+                  <div style={{ fontWeight: 'bold', marginBottom: '4px' }}>{device.name}</div>
+                  <div style={{ fontSize: '14px', color: '#666', marginBottom: '4px' }}>{device.description}</div>
+                  <div style={{ fontSize: '12px', color: '#999' }}>
+                    Plafond: {device.maxAmount.toLocaleString()} € |
+                    Réduction: {typeof device.reductionRate === 'string' ? device.reductionRate : `${device.reductionRate}%`}
+                  </div>
+                </div>
+                <div style={{ color: '#666', fontSize: '12px' }}>#{device.id}</div>
+              </div>
+            ))}
+          </div>
+        </div>
+
+        {/* Détails du calcul */}
+        <div style={{ marginTop: '20px' }}>
+          <h3 style={{ fontSize: '18px', marginBottom: '15px', borderBottom: '1px solid #eee', paddingBottom: '5px' }}>
+            Détails du calcul
+          </h3>
+          <div>
+            <div style={{ display: 'flex', justifyContent: 'space-between', padding: '8px 0', borderBottom: '1px solid #eee' }}>
+              <span>Revenus bruts totaux:</span>
+              <span>{results.totalRevenus.toLocaleString()} €</span>
+            </div>
+            <div style={{ display: 'flex', justifyContent: 'space-between', padding: '8px 0', borderBottom: '1px solid #eee' }}>
+              <span>(-) Charges déductibles:</span>
+              <span>-{results.totalCharges.toLocaleString()} €</span>
+            </div>
+            <div style={{ display: 'flex', justifyContent: 'space-between', padding: '8px 0', borderBottom: '1px solid #eee' }}>
+              <span>= Revenu net imposable:</span>
+              <span style={{ fontWeight: 'bold' }}>{results.revenuImposable.toLocaleString()} €</span>
+            </div>
+            <div style={{ display: 'flex', justifyContent: 'space-between', padding: '8px 0', borderBottom: '1px solid #eee' }}>
+              <span>Quotient familial ({results.nbParts} parts):</span>
+              <span>{Math.round(results.revenuImposable / results.nbParts).toLocaleString()} €</span>
+            </div>
+            <div style={{ display: 'flex', justifyContent: 'space-between', padding: '8px 0', borderBottom: '1px solid #eee' }}>
+              <span>Impôt brut:</span>
+              <span>{results.impotBrut.toLocaleString()} €</span>
+            </div>
+            {results.decote > 0 && (
+              <div style={{ display: 'flex', justifyContent: 'space-between', padding: '8px 0', borderBottom: '1px solid #eee' }}>
+                <span>(-) Décote:</span>
+                <span style={{ color: '#16a34a' }}>-{results.decote.toLocaleString()} €</span>
+              </div>
+            )}
+            <div style={{ display: 'flex', justifyContent: 'space-between', padding: '8px 0', borderBottom: '2px solid #333', fontWeight: 'bold' }}>
+              <span>= Impôt net à payer:</span>
+              <span style={{ color: results.impotNet > 0 ? '#dc2626' : '#16a34a' }}>
+                {results.impotNet.toLocaleString()} €
+              </span>
+            </div>
+            {results.totalEconomies > 0 && (
+              <>
+                <div style={{ display: 'flex', justifyContent: 'space-between', padding: '8px 0', borderBottom: '1px solid #eee' }}>
+                  <span>(-) Économies fiscales possibles:</span>
+                  <span style={{ color: '#16a34a' }}>-{results.totalEconomies.toLocaleString()} €</span>
+                </div>
+                <div style={{ display: 'flex', justifyContent: 'space-between', padding: '8px 0', borderBottom: '2px solid #16a34a', fontWeight: 'bold' }}>
+                  <span>= Impôt après optimisation:</span>
+                  <span style={{ color: '#16a34a' }}>{results.impotOptimise.toLocaleString()} €</span>
+                </div>
+              </>
+            )}
+          </div>
+        </div>
+
+        {/* Navigation buttons */}
+        <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: '30px' }}>
+          <Button
+            variant="outline"
+            onClick={() => setShowResults(false)}
+            style={{
+              backgroundColor: '#f8f9fa',
+              border: '1px solid #ddd',
+              padding: '10px 20px',
+              borderRadius: '4px',
+              cursor: 'pointer'
+            }}
+          >
+            Précédent
+          </Button>
+          <div className="flex gap-4">
+            <Button
+              onClick={() => {
+                const calculatedResults = performDiagnostic();
+                setResults(calculatedResults);
+              }}
+              style={{
+                backgroundColor: '#007bff',
+                color: 'white',
+                border: 'none',
+                padding: '10px 20px',
+                borderRadius: '4px',
+                cursor: 'pointer'
+              }}
+            >
+              <Calculator className="h-4 w-4 mr-2" />
+              Recalculer
+            </Button>
+            <Button
+              onClick={() => window.print()}
+              variant="outline"
+              style={{
+                backgroundColor: '#f8f9fa',
+                border: '1px solid #ddd',
+                padding: '10px 20px',
+                borderRadius: '4px',
+                cursor: 'pointer'
+              }}
+            >
+              Imprimer
+            </Button>
+          </div>
+        </div>
+
+        {/* Footer */}
+        <div style={{
+          marginTop: '30px',
+          textAlign: 'center',
+          color: '#666',
+          fontSize: '14px',
+          borderTop: '1px solid #eee',
+          paddingTop: '10px'
+        }}>
+          <p>
+            Les calculs présentés sont indicatifs et basés sur la législation en vigueur pour l'année {results.currentYear}.
+            Pour une étude personnalisée, consultez un conseiller fiscal.
+          </p>
+          <p style={{ marginTop: '5px', fontSize: '12px' }}>
+            © 2025 Diagnostic Impôt sur le Revenu - Tous droits réservés
+          </p>
         </div>
       </div>
     );
@@ -538,6 +915,44 @@ const DiagnosticImpotRevenu = () => {
               </CardTitle>
             </CardHeader>
             <CardContent className="space-y-6">
+              {/* Options de comparaison */}
+              <div className="p-4 border rounded-lg bg-blue-50">
+                <h4 className="font-medium mb-3">Options de calcul</h4>
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
+                  <SelectField
+                    label="Année d'imposition"
+                    value={currentYear.toString()}
+                    onChange={(value) => setCurrentYear(parseInt(value))}
+                    options={[
+                      { value: "2024", label: "2024" },
+                      { value: "2023", label: "2023" }
+                    ]}
+                  />
+                  <SelectField
+                    label="Année de comparaison"
+                    value={compareYear.toString()}
+                    onChange={(value) => setCompareYear(parseInt(value))}
+                    options={[
+                      { value: "2023", label: "2023" },
+                      { value: "2024", label: "2024" }
+                    ]}
+                  />
+                  <div className="space-y-2">
+                    <label className="text-sm font-medium">Affichage</label>
+                    <div className="flex gap-2">
+                      <Button
+                        variant={showComparison ? "default" : "outline"}
+                        size="sm"
+                        onClick={() => setShowComparison(!showComparison)}
+                        className="flex-1"
+                      >
+                        Comparaison
+                      </Button>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 {optimisations.map((opt, index) => (
                   <div key={opt.type} className="space-y-2">
@@ -562,7 +977,22 @@ const DiagnosticImpotRevenu = () => {
       </Tabs>
 
       <div className="flex justify-center">
-        <Button onClick={handleCalculate} size="lg" className="px-8">
+        <Button
+          onClick={handleCalculate}
+          size="lg"
+          className="px-8"
+          style={{
+            backgroundColor: '#007bff',
+            color: 'white',
+            border: 'none',
+            padding: '10px 20px',
+            fontSize: '16px',
+            borderRadius: '4px',
+            cursor: 'pointer',
+            display: 'block',
+            margin: '20px auto'
+          }}
+        >
           <Calculator className="h-4 w-4 mr-2" />
           Calculer l'impôt
         </Button>
