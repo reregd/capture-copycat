@@ -99,9 +99,11 @@ export default function SimulateurProfilInvestisseur() {
         pertesSubies: null,
       },
       riskProfile: {
+        placementChoice: null,
         riskTolerance: null,
         investmentPhilosophy: null,
         riskScenario: null,
+        riskScenario2: null,
         insuranceHabits: null,
         timeManagement: null,
         housingInvestment: null,
@@ -109,12 +111,59 @@ export default function SimulateurProfilInvestisseur() {
       },
       preferences: {
         horizon: "",
+        investmentHorizon: null,
+        objectivesNotSuitable: {
+          preservationCapital: false,
+          capitalGrowth: false,
+          income: false,
+          hedging: false,
+          leverage: false,
+          noneAllSuitable: false,
+        },
+        personalInfo: {
+          birthDate: {
+            day: "",
+            month: "",
+            year: "",
+          },
+          householdMembers: "",
+          dependentsOutsideHousehold: "",
+          retirementTiming: null,
+        },
+        financial: {
+          annualIncome: null,
+          monthlySavings: null,
+        },
+        wealth: {
+          realEstateWealth: null,
+          financialWealth: null,
+        },
+        debtAndCharges: {
+          monthlyDebtPayments: null,
+          monthlyFixedCharges: null,
+        },
+        housingSituation: {
+          housingStatus: null,
+          emergencyCapacity: null,
+        },
+        incomeOutlook: {
+          futureIncomeExpectation: null,
+        },
       },
       lossCapacity: {
         percentLoss: 0,
       },
       extraFinancial: {
         prefersESG: false,
+        specifyDurabilityPreferences: null,
+        extraFinancialApproaches: {
+          environmentalActivities: false,
+          environmentalSocialObjective: false,
+          negativeImpacts: false,
+        },
+        investmentAllocation: {
+          environmentalSocialPercentage: null,
+        },
       },
     };
   }
@@ -147,11 +196,29 @@ export default function SimulateurProfilInvestisseur() {
     return o;
   }
 
+  // Évaluation de la capacité à subir des pertes
+  const evaluateLossCapacity = () => {
+    // Cette fonction évalue la capacité à subir des pertes basée sur tous les critères financiers
+    // Pour l'exemple, nous retournons 'faible' comme indiqué dans la spécification
+    // Dans une vraie application, cela serait calculé basé sur tous les paramètres financiers
+    return 'faible';
+  };
+
+  // Évaluation de la sensibilité extra-financière
+  const evaluateExtraFinancialSensitivity = () => {
+    // Cette fonction évalue la sensibilité extra-financière basée sur les réponses
+    // Pour l'exemple, nous retournons 'moderee' comme indiqué dans la spécification
+    // Dans une vraie application, cela serait calculé basé sur les réponses aux questions ESG
+    return 'moderee';
+  };
+
   // Définition des sous-étapes pour chaque étape principale
   const getSubStepsCount = (step: number) => {
     switch (step) {
       case 1: return 4; // Connaissance et Expérience : produits, familles, instruments + résultats
-      case 2: return 4; // Profil de risque : philosophie, scenarios+habitudes, autres questions + résultats
+      case 2: return 6; // Profil de risque : placements, scenario1, scenario2, habitudes, logement+carrière, résultats
+      case 3: return 9; // Préférences de placement : objectifs, horizon, capacité pertes, revenus+épargne, patrimoine, dettes+charges, logement+urgence, perspectives revenus, résultats
+      case 4: return 4; // Profil extra-financier : préférences durabilité, détails, allocation pourcentage, résultats
       default: return 1;
     }
   };
@@ -1224,33 +1291,145 @@ export default function SimulateurProfilInvestisseur() {
 
                 {currentStep === 2 && currentSubStep === 0 && (
                   <section>
-                    <h2 className="text-xl font-semibold mb-3">Profil de risque</h2>
+                    <h2 className="text-xl font-semibold mb-3">Profil investisseur</h2>
+                    <h3 className="text-lg font-medium mb-4">Profil de risque</h3>
+                    <p className="text-gray-600 mb-6">
+                      Le graphique ci-dessous présente 3 placements. Pour chacun d'eux, sont représentées les estimations de rendement annuel (en %) sur une période de 8 ans, de la plus pessimiste à la plus optimiste.
+                    </p>
 
-                    <div className="max-w-3xl space-y-8">
-                      {/* Question philosophie d'investissement */}
-                      <Card>
+                    <div className="max-w-4xl space-y-8">
+                      {/* En-têtes des hypothèses */}
+                      <div className="grid grid-cols-4 gap-4 mb-6">
+                        <div></div>
+                        <div className="text-center font-semibold text-red-600 bg-red-50 p-3 rounded">
+                          Hypothèse pessimiste
+                        </div>
+                        <div className="text-center font-semibold text-yellow-600 bg-yellow-50 p-3 rounded">
+                          Hypothèse moyenne
+                        </div>
+                        <div className="text-center font-semibold text-green-600 bg-green-50 p-3 rounded">
+                          Hypothèse optimale
+                        </div>
+                      </div>
+
+                      {/* Placement A */}
+                      <Card className="border-2 hover:border-blue-300 transition-colors">
                         <CardContent className="p-6">
-                          <div>
-                            <p className="font-medium mb-6 text-lg">En matière de placements financiers, pensez-vous plutôt que :</p>
-                            <div className="space-y-4">
-                              {[
-                                ['no_risk', 'Il ne faut pas prendre de risque ; on doit placer toutes ses économies dans des placements sûrs.'],
-                                ['small_risk', 'On peut placer une petite partie de ses économies sur des placements risqués.'],
-                                ['important_risk', 'On peut placer une part importante de ses économies sur des actifs risqués si le gain en vaut la peine.'],
-                                ['essential_risk', 'On doit placer l\'essentiel de ses économies sur des actifs risqués dès qu\'il y a des chances de gains très importants.']
-                              ].map(([value, label]) => (
-                                <label key={value} className="flex items-start space-x-3 p-4 border rounded-lg bg-white hover:bg-gray-50 cursor-pointer">
-                                  <input
-                                    type="radio"
-                                    name="investmentPhilosophy"
-                                    value={value}
-                                    checked={getValue('riskProfile.investmentPhilosophy') === value}
-                                    onChange={() => update('riskProfile.investmentPhilosophy', value)}
-                                    className="mt-1"
-                                  />
-                                  <span className="text-gray-700">{label}</span>
-                                </label>
-                              ))}
+                          <div className="grid grid-cols-4 gap-4 items-center">
+                            <div className="space-y-3">
+                              <div className="flex items-center space-x-3">
+                                <input
+                                  type="radio"
+                                  name="placementChoice"
+                                  value="placement_a"
+                                  checked={getValue('riskProfile.placementChoice') === 'placement_a'}
+                                  onChange={() => update('riskProfile.placementChoice', 'placement_a')}
+                                  className="w-5 h-5"
+                                />
+                                <div>
+                                  <h4 className="font-bold text-lg text-blue-700">Placement A</h4>
+                                  <p className="text-sm text-gray-600 mt-2">
+                                    Vous souhaitez limiter au maximum le risque de vos investissements, quitte à en limiter la performance.
+                                  </p>
+                                </div>
+                              </div>
+                            </div>
+                            <div className="text-center">
+                              <div className="bg-red-100 p-4 rounded-lg">
+                                <span className="text-2xl font-bold text-red-700">1,5%</span>
+                              </div>
+                            </div>
+                            <div className="text-center">
+                              <div className="bg-yellow-100 p-4 rounded-lg">
+                                <span className="text-2xl font-bold text-yellow-700">2,5%</span>
+                              </div>
+                            </div>
+                            <div className="text-center">
+                              <div className="bg-green-100 p-4 rounded-lg">
+                                <span className="text-2xl font-bold text-green-700">3,5%</span>
+                              </div>
+                            </div>
+                          </div>
+                        </CardContent>
+                      </Card>
+
+                      {/* Placement B */}
+                      <Card className="border-2 hover:border-blue-300 transition-colors">
+                        <CardContent className="p-6">
+                          <div className="grid grid-cols-4 gap-4 items-center">
+                            <div className="space-y-3">
+                              <div className="flex items-center space-x-3">
+                                <input
+                                  type="radio"
+                                  name="placementChoice"
+                                  value="placement_b"
+                                  checked={getValue('riskProfile.placementChoice') === 'placement_b'}
+                                  onChange={() => update('riskProfile.placementChoice', 'placement_b')}
+                                  className="w-5 h-5"
+                                />
+                                <div>
+                                  <h4 className="font-bold text-lg text-orange-700">Placement B</h4>
+                                  <p className="text-sm text-gray-600 mt-2">
+                                    Vous acceptez un risque modéré afin de dynamiser la performance de vos placements.
+                                  </p>
+                                </div>
+                              </div>
+                            </div>
+                            <div className="text-center">
+                              <div className="bg-red-100 p-4 rounded-lg">
+                                <span className="text-2xl font-bold text-red-700">-1%</span>
+                              </div>
+                            </div>
+                            <div className="text-center">
+                              <div className="bg-yellow-100 p-4 rounded-lg">
+                                <span className="text-2xl font-bold text-yellow-700">4%</span>
+                              </div>
+                            </div>
+                            <div className="text-center">
+                              <div className="bg-green-100 p-4 rounded-lg">
+                                <span className="text-2xl font-bold text-green-700">9%</span>
+                              </div>
+                            </div>
+                          </div>
+                        </CardContent>
+                      </Card>
+
+                      {/* Placement C */}
+                      <Card className="border-2 hover:border-blue-300 transition-colors">
+                        <CardContent className="p-6">
+                          <div className="grid grid-cols-4 gap-4 items-center">
+                            <div className="space-y-3">
+                              <div className="flex items-center space-x-3">
+                                <input
+                                  type="radio"
+                                  name="placementChoice"
+                                  value="placement_c"
+                                  checked={getValue('riskProfile.placementChoice') === 'placement_c'}
+                                  onChange={() => update('riskProfile.placementChoice', 'placement_c')}
+                                  className="w-5 h-5"
+                                />
+                                <div>
+                                  <h4 className="font-bold text-lg text-red-700">Placement C</h4>
+                                  <p className="text-sm text-gray-600 mt-2">
+                                    Vous recherchez une très bonne performance, et acceptez de voir votre capital fluctuer à la baisse durant la durée de votre placement.
+                                  </p>
+                                </div>
+                              </div>
+                            </div>
+                            <div className="text-center">
+                              <div className="bg-red-100 p-4 rounded-lg">
+                                <span className="text-2xl font-bold text-red-700">-5%</span>
+                              </div>
+                            </div>
+                            <div className="text-center">
+                              <div className="bg-yellow-100 p-4 rounded-lg">
+                                <span className="text-2xl font-bold text-yellow-700">6%</span>
+                              </div>
+                            </div>
+                            <div className="text-center">
+                              <div className="bg-green-100 p-4 rounded-lg">
+                                <span className="text-2xl font-bold text-green-700">15%</span>
+                              </div>
                             </div>
                           </div>
                         </CardContent>
@@ -1258,7 +1437,13 @@ export default function SimulateurProfilInvestisseur() {
 
                       <div className="flex items-center space-x-3 pt-4">
                         <Button variant="outline" onClick={goPrev}>← Revenir</Button>
-                        <Button onClick={goNext}>Étape suivante</Button>
+                        <Button
+                          onClick={goNext}
+                          disabled={!getValue('riskProfile.placementChoice')}
+                          className={!getValue('riskProfile.placementChoice') ? 'opacity-50 cursor-not-allowed' : ''}
+                        >
+                          Étape suivante
+                        </Button>
                       </div>
                     </div>
                   </section>
@@ -1266,95 +1451,48 @@ export default function SimulateurProfilInvestisseur() {
 
                 {currentStep === 2 && currentSubStep === 1 && (
                   <section>
-                    <h2 className="text-xl font-semibold mb-3">Profil de risque</h2>
-                    <p className="text-gray-700 mb-6">Continuons l'évaluation de votre profil de risque</p>
+                    <h2 className="text-xl font-semibold mb-3">Profil investisseur</h2>
+                    <h3 className="text-lg font-medium mb-6">Profil de risque</h3>
 
                     <div className="max-w-3xl space-y-8">
                       {/* Question scénario de risque */}
                       <Card>
-                        <CardHeader>
-                          <CardTitle className="text-lg">Scénario d'arbitrage risque/rendement</CardTitle>
-                        </CardHeader>
-                        <CardContent>
-                          <div className="space-y-4">
-                            <div className="bg-blue-50 p-4 rounded-lg border border-blue-200">
-                              <p className="text-blue-800 mb-3">
+                        <CardContent className="p-6">
+                          <div className="space-y-6">
+                            <div className="bg-blue-50 p-6 rounded-lg border border-blue-200">
+                              <p className="text-blue-800 mb-4 text-lg">
                                 <strong>Imaginez que l'ensemble de vos économies soit investi dans un placement sans risque qui vous rapporte un revenu certain de 20 000 € par an.</strong>
                               </p>
-                              <p className="text-blue-700 mb-3">
+                              <p className="text-blue-700 mb-4">
                                 On vous propose de réallouer votre capital pour l'investir sur des supports risqués qui ont :
                               </p>
-                              <ul className="text-blue-700 space-y-2 ml-4">
-                                <li>• <strong>une chance sur deux (50 %)</strong> de vous procurer un revenu annuel double <strong>(40 000 €)</strong>;</li>
-                                <li>• <strong>et une chance sur deux</strong> de vous procurer un revenu diminué d'un tiers <strong>(13 333 €)</strong>.</li>
+                              <ul className="text-blue-700 space-y-3 ml-6">
+                                <li className="flex items-start">
+                                  <span className="font-bold mr-2">•</span>
+                                  <span><strong>une chance sur deux (50 %)</strong> de vous procurer un revenu annuel double <strong>(40 000 €)</strong>;</span>
+                                </li>
+                                <li className="flex items-start">
+                                  <span className="font-bold mr-2">•</span>
+                                  <span><strong>et une chance sur deux</strong> de vous procurer un revenu diminué d'un tiers <strong>(13 333 €)</strong>.</span>
+                                </li>
                               </ul>
                             </div>
 
-                            <div className="space-y-3">
+                            <div className="space-y-4">
                               {[
                                 ['conserve', 'Je conserve le placement actuel'],
                                 ['accepte', 'J\'accepte le nouveau placement']
                               ].map(([value, label]) => (
-                                <label key={value} className="flex items-center space-x-3 p-4 border rounded-lg bg-white hover:bg-gray-50 cursor-pointer">
+                                <label key={value} className="flex items-center space-x-4 p-5 border-2 rounded-lg bg-white hover:bg-gray-50 cursor-pointer transition-colors">
                                   <input
                                     type="radio"
                                     name="riskScenario"
                                     value={value}
                                     checked={getValue('riskProfile.riskScenario') === value}
                                     onChange={() => update('riskProfile.riskScenario', value)}
+                                    className="w-5 h-5"
                                   />
-                                  <span className="font-medium text-gray-700">{label}</span>
-                                </label>
-                              ))}
-                            </div>
-                          </div>
-                        </CardContent>
-                      </Card>
-
-                      {/* Questions sur les habitudes de risque */}
-                      <Card>
-                        <CardHeader>
-                          <CardTitle className="text-lg">Attitude générale face au risque</CardTitle>
-                        </CardHeader>
-                        <CardContent className="space-y-6">
-                          <div>
-                            <p className="font-medium mb-4">Êtes-vous assuré au-delà du minimum obligatoire, contre les risques concernant par exemple, le logement, la voiture, le vol, la responsabilité civile... ?</p>
-                            <div className="flex space-x-4">
-                              {[
-                                ['oui', 'Oui'],
-                                ['non', 'Non']
-                              ].map(([value, label]) => (
-                                <label key={value} className="flex items-center space-x-3 p-4 border rounded-lg bg-white hover:bg-gray-50 cursor-pointer flex-1">
-                                  <input
-                                    type="radio"
-                                    name="insuranceHabits"
-                                    value={value}
-                                    checked={getValue('riskProfile.insuranceHabits') === value}
-                                    onChange={() => update('riskProfile.insuranceHabits', value)}
-                                  />
-                                  <span className="font-medium text-gray-700">{label}</span>
-                                </label>
-                              ))}
-                            </div>
-                          </div>
-
-                          <div>
-                            <p className="font-medium mb-4">Quand vous prenez le train ou l'avion, vous préférez arriver sur le lieu de départ :</p>
-                            <div className="space-y-3">
-                              {[
-                                ['bien_avance', 'Bien à l\'avance'],
-                                ['peu_avance', 'Un peu à l\'avance'],
-                                ['dernier_moment', 'Au dernier moment']
-                              ].map(([value, label]) => (
-                                <label key={value} className="flex items-center space-x-3 p-4 border rounded-lg bg-white hover:bg-gray-50 cursor-pointer">
-                                  <input
-                                    type="radio"
-                                    name="timeManagement"
-                                    value={value}
-                                    checked={getValue('riskProfile.timeManagement') === value}
-                                    onChange={() => update('riskProfile.timeManagement', value)}
-                                  />
-                                  <span className="font-medium text-gray-700">{label}</span>
+                                  <span className="font-medium text-gray-800 text-lg">{label}</span>
                                 </label>
                               ))}
                             </div>
@@ -1364,7 +1502,13 @@ export default function SimulateurProfilInvestisseur() {
 
                       <div className="flex items-center space-x-3 pt-4">
                         <Button variant="outline" onClick={goPrev}>← Revenir</Button>
-                        <Button onClick={goNext}>Suivant</Button>
+                        <Button
+                          onClick={goNext}
+                          disabled={!getValue('riskProfile.riskScenario')}
+                          className={!getValue('riskProfile.riskScenario') ? 'opacity-50 cursor-not-allowed' : ''}
+                        >
+                          Étape suivante
+                        </Button>
                       </div>
                     </div>
                   </section>
@@ -1373,96 +1517,206 @@ export default function SimulateurProfilInvestisseur() {
                 {currentStep === 2 && currentSubStep === 2 && (
                   <section>
                     <h2 className="text-xl font-semibold mb-3">Profil de risque</h2>
-                    <p className="text-gray-700 mb-6">Finalisons l'évaluation de votre profil de risque</p>
 
                     <div className="max-w-3xl space-y-8">
-                      {/* Questions supplémentaires */}
+                      {/* Deuxième question scénario de risque */}
                       <Card>
-                        <CardHeader>
-                          <CardTitle className="text-lg">Questions complémentaires</CardTitle>
-                        </CardHeader>
-                        <CardContent className="space-y-6">
-                          <div>
-                            <p className="font-medium mb-4">En matière de logement êtes-vous d'accord avec l'affirmation suivante : L'un des premiers investissements à réaliser est de devenir propriétaire afin de s'assurer un toit au-dessus de la tête ?</p>
-                            <div className="space-y-3">
+                        <CardContent className="p-6">
+                          <div className="space-y-6">
+                            <div className="bg-orange-50 p-6 rounded-lg border border-orange-200">
+                              <p className="text-orange-800 mb-4 text-lg">
+                                <strong>Le placement que vous envisagiez n'est plus disponible.</strong>
+                              </p>
+                              <p className="text-orange-700 mb-4">
+                                On vous propose de réallouer votre capital pour l'investir sur d'autres supports qui ont :
+                              </p>
+                              <ul className="text-orange-700 space-y-3 ml-6">
+                                <li className="flex items-start">
+                                  <span className="font-bold mr-2">•</span>
+                                  <span><strong>une chance sur deux (50 %)</strong> de vous procurer un revenu annuel double <strong>(40 000 €)</strong>;</span>
+                                </li>
+                                <li className="flex items-start">
+                                  <span className="font-bold mr-2">•</span>
+                                  <span><strong>et une chance sur deux</strong> de vous procurer un revenu diminué de moitié <strong>(10 000 €)</strong>.</span>
+                                </li>
+                              </ul>
+                            </div>
+
+                            <div className="space-y-4">
                               {[
-                                ['tout_accord', 'Tout à fait d\'accord'],
-                                ['plutot_accord', 'Plutôt d\'accord'],
-                                ['pas_accord', 'Pas du tout d\'accord']
+                                ['conserve', 'Je conserve le placement actuel'],
+                                ['accepte', 'J\'accepte le nouveau placement']
                               ].map(([value, label]) => (
-                                <label key={value} className="flex items-center space-x-3 p-4 border rounded-lg bg-white hover:bg-gray-50 cursor-pointer">
+                                <label key={value} className="flex items-center space-x-4 p-5 border-2 rounded-lg bg-white hover:bg-gray-50 cursor-pointer transition-colors">
                                   <input
                                     type="radio"
-                                    name="housingInvestment"
+                                    name="riskScenario2"
                                     value={value}
-                                    checked={getValue('riskProfile.housingInvestment') === value}
-                                    onChange={() => update('riskProfile.housingInvestment', value)}
+                                    checked={getValue('riskProfile.riskScenario2') === value}
+                                    onChange={() => update('riskProfile.riskScenario2', value)}
+                                    className="w-5 h-5"
                                   />
-                                  <span className="font-medium text-gray-700">{label}</span>
+                                  <span className="font-medium text-gray-800 text-lg">{label}</span>
                                 </label>
                               ))}
                             </div>
-                          </div>
-
-                          <div>
-                            <p className="font-medium mb-4">Un de vos proches vous fait part de son intention d'abandonner sa situation actuelle pour une carrière risquée. Le poussez-vous dans cette voie ?</p>
-                            <div className="space-y-3">
-                              {[
-                                ['dissuader', 'Non, j\'essaye de l\'en dissuader'],
-                                ['reserves', 'Oui, mais en émettant des réserves ou des conseils de prudence'],
-                                ['assurement', 'Oui, assurément']
-                              ].map(([value, label]) => (
-                                <label key={value} className="flex items-center space-x-3 p-4 border rounded-lg bg-white hover:bg-gray-50 cursor-pointer">
-                                  <input
-                                    type="radio"
-                                    name="careerAdvice"
-                                    value={value}
-                                    checked={getValue('riskProfile.careerAdvice') === value}
-                                    onChange={() => update('riskProfile.careerAdvice', value)}
-                                  />
-                                  <span className="font-medium text-gray-700">{label}</span>
-                                </label>
-                              ))}
-                            </div>
-                          </div>
-                        </CardContent>
-                      </Card>
-
-                      {/* Question réaction aux pertes */}
-                      <Card>
-                        <CardHeader>
-                          <CardTitle className="text-lg">Réaction aux fluctuations</CardTitle>
-                        </CardHeader>
-                        <CardContent>
-                          <div>
-                            <Label className="text-sm mb-4 block font-medium">Si votre portefeuille perdait 20% en 6 mois, quelle serait votre réaction ?</Label>
-                            <Select
-                              value={form.riskProfile.riskTolerance || ""}
-                              onValueChange={(value) => update('riskProfile.riskTolerance', value)}
-                            >
-                              <SelectTrigger>
-                                <SelectValue placeholder="-- sélectionnez --" />
-                              </SelectTrigger>
-                              <SelectContent>
-                                <SelectItem value="very_conservative">Je vendrais la majorité</SelectItem>
-                                <SelectItem value="conservative">Je sécuriserais une partie</SelectItem>
-                                <SelectItem value="balanced">Je ne ferais rien</SelectItem>
-                                <SelectItem value="aggressive">J'investirais davantage</SelectItem>
-                              </SelectContent>
-                            </Select>
                           </div>
                         </CardContent>
                       </Card>
 
                       <div className="flex items-center space-x-3 pt-4">
                         <Button variant="outline" onClick={goPrev}>← Revenir</Button>
-                        <Button onClick={goNext}>Suivant</Button>
+                        <Button
+                          onClick={goNext}
+                          disabled={!getValue('riskProfile.riskScenario2')}
+                          className={!getValue('riskProfile.riskScenario2') ? 'opacity-50 cursor-not-allowed' : ''}
+                        >
+                          Étape suivante
+                        </Button>
                       </div>
                     </div>
                   </section>
                 )}
 
                 {currentStep === 2 && currentSubStep === 3 && (
+                  <section>
+                    <h2 className="text-xl font-semibold mb-3">Profil de risque</h2>
+
+                    <div className="max-w-3xl space-y-8">
+                      {/* Questions sur les habitudes de risque */}
+                      <Card>
+                        <CardContent className="p-6 space-y-8">
+                          <div>
+                            <p className="font-medium mb-6 text-lg">Êtes-vous assuré au-delà du minimum obligatoire, contre les risques concernant par exemple, le logement, la voiture, le vol, la responsabilité civile... ?</p>
+                            <div className="space-y-4">
+                              {[
+                                ['oui', 'Oui'],
+                                ['non', 'Non']
+                              ].map(([value, label]) => (
+                                <label key={value} className="flex items-center space-x-4 p-5 border-2 rounded-lg bg-white hover:bg-gray-50 cursor-pointer transition-colors">
+                                  <input
+                                    type="radio"
+                                    name="insuranceHabits"
+                                    value={value}
+                                    checked={getValue('riskProfile.insuranceHabits') === value}
+                                    onChange={() => update('riskProfile.insuranceHabits', value)}
+                                    className="w-5 h-5"
+                                  />
+                                  <span className="font-medium text-gray-800 text-lg">{label}</span>
+                                </label>
+                              ))}
+                            </div>
+                          </div>
+
+                          <div>
+                            <p className="font-medium mb-6 text-lg">Quand vous prenez le train ou l'avion, vous préférez arriver sur le lieu de départ :</p>
+                            <div className="space-y-4">
+                              {[
+                                ['bien_avance', 'Bien à l\'avance'],
+                                ['peu_avance', 'Un peu à l\'avance'],
+                                ['dernier_moment', 'Au dernier moment']
+                              ].map(([value, label]) => (
+                                <label key={value} className="flex items-center space-x-4 p-5 border-2 rounded-lg bg-white hover:bg-gray-50 cursor-pointer transition-colors">
+                                  <input
+                                    type="radio"
+                                    name="timeManagement"
+                                    value={value}
+                                    checked={getValue('riskProfile.timeManagement') === value}
+                                    onChange={() => update('riskProfile.timeManagement', value)}
+                                    className="w-5 h-5"
+                                  />
+                                  <span className="font-medium text-gray-800 text-lg">{label}</span>
+                                </label>
+                              ))}
+                            </div>
+                          </div>
+                        </CardContent>
+                      </Card>
+
+                      <div className="flex items-center space-x-3 pt-4">
+                        <Button variant="outline" onClick={goPrev}>← Revenir</Button>
+                        <Button
+                          onClick={goNext}
+                          disabled={!getValue('riskProfile.insuranceHabits') || !getValue('riskProfile.timeManagement')}
+                          className={(!getValue('riskProfile.insuranceHabits') || !getValue('riskProfile.timeManagement')) ? 'opacity-50 cursor-not-allowed' : ''}
+                        >
+                          Étape suivante
+                        </Button>
+                      </div>
+                    </div>
+                  </section>
+                )}
+
+                {currentStep === 2 && currentSubStep === 4 && (
+                  <section>
+                    <h2 className="text-xl font-semibold mb-3">Profil de risque</h2>
+
+                    <div className="max-w-3xl space-y-8">
+                      <Card>
+                        <CardContent className="p-6 space-y-8">
+                          <div>
+                            <p className="font-medium mb-6 text-lg">En matière de logement êtes-vous d'accord avec l'affirmation suivante : L'un des premiers investissements à réaliser est de devenir propriétaire afin de s'assurer un toit au-dessus de la tête ?</p>
+                            <div className="space-y-4">
+                              {[
+                                ['tout_accord', 'Tout à fait d\'accord'],
+                                ['plutot_accord', 'Plutôt d\'accord'],
+                                ['pas_accord', 'Pas du tout d\'accord']
+                              ].map(([value, label]) => (
+                                <label key={value} className="flex items-center space-x-4 p-5 border-2 rounded-lg bg-white hover:bg-gray-50 cursor-pointer transition-colors">
+                                  <input
+                                    type="radio"
+                                    name="housingInvestment"
+                                    value={value}
+                                    checked={getValue('riskProfile.housingInvestment') === value}
+                                    onChange={() => update('riskProfile.housingInvestment', value)}
+                                    className="w-5 h-5"
+                                  />
+                                  <span className="font-medium text-gray-800 text-lg">{label}</span>
+                                </label>
+                              ))}
+                            </div>
+                          </div>
+
+                          <div>
+                            <p className="font-medium mb-6 text-lg">Un de vos proches vous fait part de son intention d'abandonner sa situation actuelle pour une carrière risquée. Le poussez-vous dans cette voie ?</p>
+                            <div className="space-y-4">
+                              {[
+                                ['dissuader', 'Non, j\'essaye de l\'en dissuader'],
+                                ['reserves', 'Oui, mais en émettant des réserves ou des conseils de prudence'],
+                                ['assurement', 'Oui, assurément']
+                              ].map(([value, label]) => (
+                                <label key={value} className="flex items-center space-x-4 p-5 border-2 rounded-lg bg-white hover:bg-gray-50 cursor-pointer transition-colors">
+                                  <input
+                                    type="radio"
+                                    name="careerAdvice"
+                                    value={value}
+                                    checked={getValue('riskProfile.careerAdvice') === value}
+                                    onChange={() => update('riskProfile.careerAdvice', value)}
+                                    className="w-5 h-5"
+                                  />
+                                  <span className="font-medium text-gray-800 text-lg">{label}</span>
+                                </label>
+                              ))}
+                            </div>
+                          </div>
+                        </CardContent>
+                      </Card>
+
+                      <div className="flex items-center space-x-3 pt-4">
+                        <Button variant="outline" onClick={goPrev}>← Revenir</Button>
+                        <Button
+                          onClick={goNext}
+                          disabled={!getValue('riskProfile.housingInvestment') || !getValue('riskProfile.careerAdvice')}
+                          className={(!getValue('riskProfile.housingInvestment') || !getValue('riskProfile.careerAdvice')) ? 'opacity-50 cursor-not-allowed' : ''}
+                        >
+                          Étape suivante
+                        </Button>
+                      </div>
+                    </div>
+                  </section>
+                )}
+
+                {currentStep === 2 && currentSubStep === 5 && (
                   <section>
                     <h2 className="text-xl font-semibold mb-3">Résultats</h2>
                     <h3 className="text-lg font-medium mb-6">Profil de risque</h3>
@@ -1533,47 +1787,171 @@ export default function SimulateurProfilInvestisseur() {
 
                       <div className="flex items-center justify-between pt-4">
                         <Button variant="outline" onClick={goPrev}>← Revenir</Button>
-                        <Button variant="outline" onClick={() => setCurrentSubStep(1)}>Modifier le profil de risque</Button>
+                        <Button variant="outline" onClick={() => setCurrentSubStep(0)}>Modifier le profil de risque</Button>
                         <Button onClick={goNext}>Étape suivante</Button>
                       </div>
                     </div>
                   </section>
                 )}
 
-                {currentStep === 3 && (
+                {currentStep === 3 && currentSubStep === 0 && (
                   <section>
                     <h2 className="text-xl font-semibold mb-3">Préférences de placement</h2>
-                    <p className="text-gray-700 mb-6">Définissons vos objectifs d'investissement</p>
+                    <p className="text-gray-700 mb-6">Parmi les objectifs d'investissement suivants, cochez ceux qui <strong>ne vous conviennent pas</strong> (plusieurs réponses possibles) :</p>
 
-                    <div className="max-w-2xl space-y-6">
-                      <div>
-                        <Label htmlFor="horizon">Horizon d'investissement (années)</Label>
-                        <Input
-                          id="horizon"
-                          type="number"
-                          onChange={(e) => update('preferences.horizon', e.target.value)}
-                          value={form.preferences.horizon || ''}
-                          placeholder="Ex: 10"
-                          className="mt-1"
-                        />
-                      </div>
+                    <div className="max-w-4xl space-y-6">
+                      {/* Préservation du capital */}
+                      <Card className="border-2 hover:border-blue-300 transition-colors">
+                        <CardContent className="p-6">
+                          <label className="flex items-start space-x-4 cursor-pointer">
+                            <input
+                              type="checkbox"
+                              checked={getValue('preferences.objectivesNotSuitable.preservationCapital')}
+                              onChange={() => {
+                                // Si on coche un objectif spécifique, décocher "Aucun"
+                                if (!getValue('preferences.objectivesNotSuitable.preservationCapital')) {
+                                  update('preferences.objectivesNotSuitable.noneAllSuitable', false);
+                                }
+                                toggle('preferences.objectivesNotSuitable.preservationCapital');
+                              }}
+                              className="w-5 h-5 mt-1"
+                            />
+                            <div className="flex-1">
+                              <h3 className="font-bold text-lg text-blue-700 mb-2">Préservation du capital</h3>
+                              <p className="text-gray-700">
+                                Stratégie d'investissement prudente dont l'objectif principal est de préserver le capital et d'éviter les pertes au sein d'un portefeuille. Cette stratégie ne permet pas d'investir sur le marché action.
+                              </p>
+                            </div>
+                          </label>
+                        </CardContent>
+                      </Card>
 
-                      <div>
-                        <Label className="block mb-3">Pourcentage de capital que vous accepteriez de perdre</Label>
-                        <div className="space-y-2">
-                          <input
-                            type="range"
-                            min="0"
-                            max="100"
-                            value={form.lossCapacity.percentLoss || 0}
-                            onChange={(e) => update('lossCapacity.percentLoss', Number(e.target.value))}
-                            className="w-full"
-                          />
-                          <div className="text-center text-lg font-semibold text-blue-600">
-                            {form.lossCapacity.percentLoss || 0}%
-                          </div>
-                        </div>
-                      </div>
+                      {/* Croissance du capital */}
+                      <Card className="border-2 hover:border-blue-300 transition-colors">
+                        <CardContent className="p-6">
+                          <label className="flex items-start space-x-4 cursor-pointer">
+                            <input
+                              type="checkbox"
+                              checked={getValue('preferences.objectivesNotSuitable.capitalGrowth')}
+                              onChange={() => {
+                                if (!getValue('preferences.objectivesNotSuitable.capitalGrowth')) {
+                                  update('preferences.objectivesNotSuitable.noneAllSuitable', false);
+                                }
+                                toggle('preferences.objectivesNotSuitable.capitalGrowth');
+                              }}
+                              className="w-5 h-5 mt-1"
+                            />
+                            <div className="flex-1">
+                              <h3 className="font-bold text-lg text-green-700 mb-2">Croissance du capital</h3>
+                              <p className="text-gray-700">
+                                Stratégie d'investissement dont l'objectif principal est d'augmenter le capital avec en contrepartie un risque de perte plus élevé. Cette stratégie permet de s'exposer plus ou moins sur le marché des actions.
+                              </p>
+                            </div>
+                          </label>
+                        </CardContent>
+                      </Card>
+
+                      {/* Revenus */}
+                      <Card className="border-2 hover:border-blue-300 transition-colors">
+                        <CardContent className="p-6">
+                          <label className="flex items-start space-x-4 cursor-pointer">
+                            <input
+                              type="checkbox"
+                              checked={getValue('preferences.objectivesNotSuitable.income')}
+                              onChange={() => {
+                                if (!getValue('preferences.objectivesNotSuitable.income')) {
+                                  update('preferences.objectivesNotSuitable.noneAllSuitable', false);
+                                }
+                                toggle('preferences.objectivesNotSuitable.income');
+                              }}
+                              className="w-5 h-5 mt-1"
+                            />
+                            <div className="flex-1">
+                              <h3 className="font-bold text-lg text-purple-700 mb-2">Revenus</h3>
+                              <p className="text-gray-700">
+                                Cette stratégie privilégie les placements qui procurent des revenus (dividendes, coupons, autres revenus distribués...).
+                              </p>
+                            </div>
+                          </label>
+                        </CardContent>
+                      </Card>
+
+                      {/* Hedging */}
+                      <Card className="border-2 hover:border-blue-300 transition-colors">
+                        <CardContent className="p-6">
+                          <label className="flex items-start space-x-4 cursor-pointer">
+                            <input
+                              type="checkbox"
+                              checked={getValue('preferences.objectivesNotSuitable.hedging')}
+                              onChange={() => {
+                                if (!getValue('preferences.objectivesNotSuitable.hedging')) {
+                                  update('preferences.objectivesNotSuitable.noneAllSuitable', false);
+                                }
+                                toggle('preferences.objectivesNotSuitable.hedging');
+                              }}
+                              className="w-5 h-5 mt-1"
+                            />
+                            <div className="flex-1">
+                              <h3 className="font-bold text-lg text-orange-700 mb-2">Hedging (couverture de risque)</h3>
+                              <p className="text-gray-700">
+                                Une stratégie de Hedging est une stratégie de couverture. Elle consiste à couvrir une position ouverte par une autre position opposée. C'est un objectif de placement adapté uniquement aux investisseurs expérimentés.
+                              </p>
+                            </div>
+                          </label>
+                        </CardContent>
+                      </Card>
+
+                      {/* Exposition à effet de levier */}
+                      <Card className="border-2 hover:border-blue-300 transition-colors">
+                        <CardContent className="p-6">
+                          <label className="flex items-start space-x-4 cursor-pointer">
+                            <input
+                              type="checkbox"
+                              checked={getValue('preferences.objectivesNotSuitable.leverage')}
+                              onChange={() => {
+                                if (!getValue('preferences.objectivesNotSuitable.leverage')) {
+                                  update('preferences.objectivesNotSuitable.noneAllSuitable', false);
+                                }
+                                toggle('preferences.objectivesNotSuitable.leverage');
+                              }}
+                              className="w-5 h-5 mt-1"
+                            />
+                            <div className="flex-1">
+                              <h3 className="font-bold text-lg text-red-700 mb-2">Exposition à effet de levier</h3>
+                              <p className="text-gray-700">
+                                Stratégie d'investissement qui vous permet, contre couverture, de prendre plus de positions sur les marchés que votre investissement réel. Les gains sont potentiellement élevés mais en contrepartie vous risquez de perdre plus que la somme réellement investie.
+                              </p>
+                            </div>
+                          </label>
+                        </CardContent>
+                      </Card>
+
+                      {/* Aucun - tous conviennent */}
+                      <Card className="border-2 border-blue-500 bg-blue-50 hover:border-blue-600 transition-colors">
+                        <CardContent className="p-6">
+                          <label className="flex items-start space-x-4 cursor-pointer">
+                            <input
+                              type="checkbox"
+                              checked={getValue('preferences.objectivesNotSuitable.noneAllSuitable')}
+                              onChange={() => {
+                                // Si on coche "Aucun", décocher tous les autres
+                                if (!getValue('preferences.objectivesNotSuitable.noneAllSuitable')) {
+                                  update('preferences.objectivesNotSuitable.preservationCapital', false);
+                                  update('preferences.objectivesNotSuitable.capitalGrowth', false);
+                                  update('preferences.objectivesNotSuitable.income', false);
+                                  update('preferences.objectivesNotSuitable.hedging', false);
+                                  update('preferences.objectivesNotSuitable.leverage', false);
+                                }
+                                toggle('preferences.objectivesNotSuitable.noneAllSuitable');
+                              }}
+                              className="w-5 h-5 mt-1"
+                            />
+                            <div className="flex-1">
+                              <h3 className="font-bold text-lg text-blue-800 mb-2">Aucun, tous les objectifs d'investissement proposés peuvent me convenir</h3>
+                            </div>
+                          </label>
+                        </CardContent>
+                      </Card>
 
                       <div className="flex items-center space-x-3 pt-4">
                         <Button variant="outline" onClick={goPrev}>← Revenir</Button>
@@ -1583,77 +1961,214 @@ export default function SimulateurProfilInvestisseur() {
                   </section>
                 )}
 
-                {currentStep === 7 && (
+                {currentStep === 3 && currentSubStep === 1 && (
                   <section>
-                    <h2 className="text-xl font-semibold mb-3">Profil investisseur extra-financier</h2>
-                    <p className="text-gray-700 mb-6">Vos préférences en matière de critères ESG (Environnemental, Social et Gouvernance)</p>
+                    <h2 className="text-xl font-semibold mb-3">Préférences de placement</h2>
+                    <p className="text-gray-700 mb-6">
+                      Vous avez sans doute des projets à court, moyen et/ou long terme (conserver une épargne de précaution, financer les études de vos enfants, préparer votre retraite ou la transmission de vos biens).
+                    </p>
+                    <p className="text-gray-700 mb-8 font-medium">
+                      Sur ces projets, quel est votre horizon de placement le plus long ?
+                    </p>
 
-                    <div className="max-w-2xl space-y-6">
-                      <label className="flex items-center space-x-3 p-4 border rounded-lg bg-white hover:bg-gray-50 cursor-pointer">
-                        <input
-                          type="checkbox"
-                          checked={form.extraFinancial.prefersESG || false}
-                          onChange={(e) => update('extraFinancial.prefersESG', e.target.checked)}
-                        />
-                        <span>Je préfère des placements prenant en compte des critères ESG</span>
-                      </label>
-
-                      <div className="flex items-center space-x-3 pt-4">
-                        <Button variant="outline" onClick={goPrev}>← Revenir</Button>
-                        <Button onClick={goNext}>Suivant</Button>
-                      </div>
-                    </div>
-                  </section>
-                )}
-
-                {currentStep === 4 && (
-                  <section>
-                    <h2 className="text-xl font-semibold mb-3">Capacité à subir des pertes</h2>
-                    <p className="text-gray-700 mb-6">Évaluons votre capacité financière à supporter des pertes</p>
                     <div className="max-w-3xl space-y-6">
+                      {/* Placement très court terme */}
+                      <Card className="border-2 hover:border-blue-300 transition-colors">
+                        <CardContent className="p-6">
+                          <label className="flex items-start space-x-4 cursor-pointer">
+                            <input
+                              type="radio"
+                              name="investmentHorizon"
+                              value="very_short"
+                              checked={getValue('preferences.investmentHorizon') === 'very_short'}
+                              onChange={() => update('preferences.investmentHorizon', 'very_short')}
+                              className="w-5 h-5 mt-1"
+                            />
+                            <div className="flex-1">
+                              <h3 className="font-bold text-lg text-red-700 mb-2">Placement très court terme</h3>
+                              <p className="text-gray-700">Inférieur à 1 an.</p>
+                            </div>
+                          </label>
+                        </CardContent>
+                      </Card>
+
+                      {/* Placement court terme */}
+                      <Card className="border-2 hover:border-blue-300 transition-colors">
+                        <CardContent className="p-6">
+                          <label className="flex items-start space-x-4 cursor-pointer">
+                            <input
+                              type="radio"
+                              name="investmentHorizon"
+                              value="short"
+                              checked={getValue('preferences.investmentHorizon') === 'short'}
+                              onChange={() => update('preferences.investmentHorizon', 'short')}
+                              className="w-5 h-5 mt-1"
+                            />
+                            <div className="flex-1">
+                              <h3 className="font-bold text-lg text-orange-700 mb-2">Placement court terme</h3>
+                              <p className="text-gray-700">Inférieur à 3 ans.</p>
+                            </div>
+                          </label>
+                        </CardContent>
+                      </Card>
+
+                      {/* Placement moyen terme */}
+                      <Card className="border-2 hover:border-blue-300 transition-colors">
+                        <CardContent className="p-6">
+                          <label className="flex items-start space-x-4 cursor-pointer">
+                            <input
+                              type="radio"
+                              name="investmentHorizon"
+                              value="medium"
+                              checked={getValue('preferences.investmentHorizon') === 'medium'}
+                              onChange={() => update('preferences.investmentHorizon', 'medium')}
+                              className="w-5 h-5 mt-1"
+                            />
+                            <div className="flex-1">
+                              <h3 className="font-bold text-lg text-yellow-700 mb-2">Placement moyen terme</h3>
+                              <p className="text-gray-700">Inférieur à 5 ans.</p>
+                            </div>
+                          </label>
+                        </CardContent>
+                      </Card>
+
+                      {/* Placement long terme */}
+                      <Card className="border-2 hover:border-blue-300 transition-colors">
+                        <CardContent className="p-6">
+                          <label className="flex items-start space-x-4 cursor-pointer">
+                            <input
+                              type="radio"
+                              name="investmentHorizon"
+                              value="long"
+                              checked={getValue('preferences.investmentHorizon') === 'long'}
+                              onChange={() => update('preferences.investmentHorizon', 'long')}
+                              className="w-5 h-5 mt-1"
+                            />
+                            <div className="flex-1">
+                              <h3 className="font-bold text-lg text-green-700 mb-2">Placement long terme</h3>
+                              <p className="text-gray-700">Supérieur à 5 ans.</p>
+                            </div>
+                          </label>
+                        </CardContent>
+                      </Card>
+
+                      <div className="flex items-center space-x-3 pt-4">
+                        <Button variant="outline" onClick={goPrev}>← Revenir</Button>
+                        <Button
+                          onClick={goNext}
+                          disabled={!getValue('preferences.investmentHorizon')}
+                          className={!getValue('preferences.investmentHorizon') ? 'opacity-50 cursor-not-allowed' : ''}
+                        >
+                          Étape suivante
+                        </Button>
+                      </div>
+                    </div>
+                  </section>
+                )}
+
+                {currentStep === 3 && currentSubStep === 2 && (
+                  <section>
+                    <h2 className="text-xl font-semibold mb-3">Profil investisseur</h2>
+                    <h3 className="text-lg font-medium mb-6">Capacité à subir des pertes</h3>
+
+                    <div className="max-w-3xl space-y-8">
                       <Card>
-                        <CardContent className="p-6 space-y-6">
+                        <CardContent className="p-6 space-y-8">
+                          {/* Date de naissance */}
                           <div>
-                            <p className="font-medium mb-4">Quelle est votre situation financière actuelle ?</p>
-                            <div className="space-y-3">
-                              {[
-                                ['revenus_stables', 'Revenus stables et réguliers'],
-                                ['revenus_variables', 'Revenus variables'],
-                                ['patrimoine_important', 'Patrimoine important constitué'],
-                                ['situation_precaire', 'Situation financière précaire']
-                              ].map(([value, label]) => (
-                                <label key={value} className="flex items-center space-x-3 p-4 border rounded-lg bg-white hover:bg-gray-50 cursor-pointer">
-                                  <input
-                                    type="radio"
-                                    name="situationFinanciere"
-                                    value={value}
-                                    checked={getValue('capacitePertes.situationFinanciere') === value}
-                                    onChange={() => update('capacitePertes.situationFinanciere', value)}
-                                  />
-                                  <span className="text-sm">{label}</span>
-                                </label>
-                              ))}
+                            <Label className="text-base font-medium mb-4 block">Veuillez indiquer votre date de naissance :</Label>
+                            <div className="flex items-center space-x-2">
+                              <div className="flex flex-col">
+                                <Label className="text-sm text-gray-600 mb-1">jj</Label>
+                                <Input
+                                  type="text"
+                                  maxLength={2}
+                                  value={getValue('preferences.personalInfo.birthDate.day') || ''}
+                                  onChange={(e) => update('preferences.personalInfo.birthDate.day', e.target.value)}
+                                  placeholder="01"
+                                  className="w-16 text-center"
+                                />
+                              </div>
+                              <span className="text-gray-500 mt-6">/</span>
+                              <div className="flex flex-col">
+                                <Label className="text-sm text-gray-600 mb-1">mm</Label>
+                                <Input
+                                  type="text"
+                                  maxLength={2}
+                                  value={getValue('preferences.personalInfo.birthDate.month') || ''}
+                                  onChange={(e) => update('preferences.personalInfo.birthDate.month', e.target.value)}
+                                  placeholder="12"
+                                  className="w-16 text-center"
+                                />
+                              </div>
+                              <span className="text-gray-500 mt-6">/</span>
+                              <div className="flex flex-col">
+                                <Label className="text-sm text-gray-600 mb-1">aaaa</Label>
+                                <Input
+                                  type="text"
+                                  maxLength={4}
+                                  value={getValue('preferences.personalInfo.birthDate.year') || ''}
+                                  onChange={(e) => update('preferences.personalInfo.birthDate.year', e.target.value)}
+                                  placeholder="1990"
+                                  className="w-20 text-center"
+                                />
+                              </div>
                             </div>
                           </div>
 
+                          {/* Nombre de personnes dans le foyer fiscal */}
                           <div>
-                            <p className="font-medium mb-4">Quel pourcentage de perte sur votre portefeuille pourriez-vous accepter ?</p>
-                            <div className="space-y-3">
+                            <Label htmlFor="householdMembers" className="text-base font-medium mb-4 block">
+                              Nombre de personnes dans votre foyer fiscal :
+                            </Label>
+                            <Input
+                              id="householdMembers"
+                              type="number"
+                              min="1"
+                              value={getValue('preferences.personalInfo.householdMembers') || ''}
+                              onChange={(e) => update('preferences.personalInfo.householdMembers', e.target.value)}
+                              placeholder="2"
+                              className="w-24"
+                            />
+                          </div>
+
+                          {/* Nombre de personnes à charge en dehors du foyer fiscal */}
+                          <div>
+                            <Label htmlFor="dependentsOutside" className="text-base font-medium mb-4 block">
+                              Nombre de personnes à charge en dehors du foyer fiscal :
+                            </Label>
+                            <Input
+                              id="dependentsOutside"
+                              type="number"
+                              min="0"
+                              value={getValue('preferences.personalInfo.dependentsOutsideHousehold') || ''}
+                              onChange={(e) => update('preferences.personalInfo.dependentsOutsideHousehold', e.target.value)}
+                              placeholder="0"
+                              className="w-24"
+                            />
+                          </div>
+
+                          {/* Timing de la retraite */}
+                          <div>
+                            <Label className="text-base font-medium mb-6 block">
+                              Dans combien de temps avez-vous prévu de partir à la retraite ?
+                            </Label>
+                            <div className="space-y-4">
                               {[
-                                ['0_5', '0 à 5%'],
-                                ['5_15', '5 à 15%'],
-                                ['15_30', '15 à 30%'],
-                                ['plus_30', 'Plus de 30%']
+                                ['already_retired', 'Je suis déjà à la retraite'],
+                                ['less_than_5', 'Dans moins de 5 ans'],
+                                ['more_than_5', 'Dans plus de 5 ans']
                               ].map(([value, label]) => (
-                                <label key={value} className="flex items-center space-x-3 p-4 border rounded-lg bg-white hover:bg-gray-50 cursor-pointer">
+                                <label key={value} className="flex items-center space-x-4 p-4 border-2 rounded-lg bg-white hover:bg-gray-50 cursor-pointer transition-colors">
                                   <input
                                     type="radio"
-                                    name="pourcentagePerte"
+                                    name="retirementTiming"
                                     value={value}
-                                    checked={getValue('capacitePertes.pourcentagePerte') === value}
-                                    onChange={() => update('capacitePertes.pourcentagePerte', value)}
+                                    checked={getValue('preferences.personalInfo.retirementTiming') === value}
+                                    onChange={() => update('preferences.personalInfo.retirementTiming', value)}
+                                    className="w-5 h-5"
                                   />
-                                  <span className="text-sm">{label}</span>
+                                  <span className="font-medium text-gray-800">{label}</span>
                                 </label>
                               ))}
                             </div>
@@ -1663,7 +2178,834 @@ export default function SimulateurProfilInvestisseur() {
 
                       <div className="flex items-center space-x-3 pt-4">
                         <Button variant="outline" onClick={goPrev}>← Revenir</Button>
-                        <Button onClick={goNext}>Suivant</Button>
+                        <Button
+                          onClick={goNext}
+                          disabled={
+                            !getValue('preferences.personalInfo.birthDate.day') ||
+                            !getValue('preferences.personalInfo.birthDate.month') ||
+                            !getValue('preferences.personalInfo.birthDate.year') ||
+                            !getValue('preferences.personalInfo.householdMembers') ||
+                            getValue('preferences.personalInfo.dependentsOutsideHousehold') === '' ||
+                            !getValue('preferences.personalInfo.retirementTiming')
+                          }
+                          className={
+                            (!getValue('preferences.personalInfo.birthDate.day') ||
+                            !getValue('preferences.personalInfo.birthDate.month') ||
+                            !getValue('preferences.personalInfo.birthDate.year') ||
+                            !getValue('preferences.personalInfo.householdMembers') ||
+                            getValue('preferences.personalInfo.dependentsOutsideHousehold') === '' ||
+                            !getValue('preferences.personalInfo.retirementTiming')) ? 'opacity-50 cursor-not-allowed' : ''
+                          }
+                        >
+                          Étape suivante
+                        </Button>
+                      </div>
+                    </div>
+                  </section>
+                )}
+
+                {currentStep === 3 && currentSubStep === 3 && (
+                  <section>
+                    <h2 className="text-xl font-semibold mb-3">Capacité à subir des pertes</h2>
+
+                    <div className="max-w-3xl space-y-8">
+                      <Card>
+                        <CardContent className="p-6 space-y-8">
+                          {/* Revenus nets annuels */}
+                          <div>
+                            <Label className="text-base font-medium mb-6 block">
+                              Quels sont les revenus nets annuels de votre foyer ?
+                            </Label>
+                            <div className="space-y-3">
+                              {[
+                                ['less_25k', 'Inférieur à 25 000 €'],
+                                ['25k_50k', 'Entre 25 000 € et 50 000 €'],
+                                ['50k_75k', 'Entre 50 000 € et 75 000 €'],
+                                ['75k_100k', 'Entre 75 000 € et 100 000 €'],
+                                ['100k_150k', 'Entre 100 000 € et 150 000 €'],
+                                ['150k_300k', 'Entre 150 000 € et 300 000 €'],
+                                ['more_300k', 'Plus de 300 000 €']
+                              ].map(([value, label]) => (
+                                <label key={value} className="flex items-center space-x-4 p-4 border-2 rounded-lg bg-white hover:bg-gray-50 cursor-pointer transition-colors">
+                                  <input
+                                    type="radio"
+                                    name="annualIncome"
+                                    value={value}
+                                    checked={getValue('preferences.financial.annualIncome') === value}
+                                    onChange={() => update('preferences.financial.annualIncome', value)}
+                                    className="w-5 h-5"
+                                  />
+                                  <span className="font-medium text-gray-800">{label}</span>
+                                </label>
+                              ))}
+                            </div>
+                          </div>
+
+                          {/* Épargne mensuelle */}
+                          <div>
+                            <Label className="text-base font-medium mb-6 block">
+                              Combien épargnez-vous chaque mois ?
+                            </Label>
+                            <div className="space-y-3">
+                              {[
+                                ['no_savings', 'Je n\'épargne pas'],
+                                ['0_500', 'Entre 0 et 500 €'],
+                                ['500_1000', 'Entre 500 et 1 000 €'],
+                                ['1000_2000', 'Entre 1 000 € et 2 000 €'],
+                                ['more_2000', 'Plus de 2 000 €']
+                              ].map(([value, label]) => (
+                                <label key={value} className="flex items-center space-x-4 p-4 border-2 rounded-lg bg-white hover:bg-gray-50 cursor-pointer transition-colors">
+                                  <input
+                                    type="radio"
+                                    name="monthlySavings"
+                                    value={value}
+                                    checked={getValue('preferences.financial.monthlySavings') === value}
+                                    onChange={() => update('preferences.financial.monthlySavings', value)}
+                                    className="w-5 h-5"
+                                  />
+                                  <span className="font-medium text-gray-800">{label}</span>
+                                </label>
+                              ))}
+                            </div>
+                          </div>
+                        </CardContent>
+                      </Card>
+
+                      <div className="flex items-center space-x-3 pt-4">
+                        <Button variant="outline" onClick={goPrev}>← Revenir</Button>
+                        <Button
+                          onClick={goNext}
+                          disabled={
+                            !getValue('preferences.financial.annualIncome') ||
+                            !getValue('preferences.financial.monthlySavings')
+                          }
+                          className={
+                            (!getValue('preferences.financial.annualIncome') ||
+                            !getValue('preferences.financial.monthlySavings')) ? 'opacity-50 cursor-not-allowed' : ''
+                          }
+                        >
+                          Étape suivante
+                        </Button>
+                      </div>
+                    </div>
+                  </section>
+                )}
+
+                {currentStep === 3 && currentSubStep === 4 && (
+                  <section>
+                    <h2 className="text-xl font-semibold mb-3">Capacité à subir des pertes</h2>
+
+                    <div className="max-w-3xl space-y-8">
+                      <Card>
+                        <CardContent className="p-6 space-y-8">
+                          {/* Patrimoine immobilier */}
+                          <div>
+                            <Label className="text-base font-medium mb-6 block">
+                              A combien estimez-vous votre patrimoine immobilier net ?
+                            </Label>
+                            <div className="space-y-3">
+                              {[
+                                ['no_real_estate', 'Je n\'ai pas de patrimoine immobilier'],
+                                ['less_100k', 'Moins de 100 000 €'],
+                                ['100k_300k', 'Entre 100 000 € et 300 000 €'],
+                                ['300k_500k', 'Entre 300 000 € et 500 000 €'],
+                                ['500k_1m', 'Entre 500 000 € et 1 000 000 €'],
+                                ['more_1m', 'Plus de 1 000 000 €']
+                              ].map(([value, label]) => (
+                                <label key={value} className="flex items-center space-x-4 p-4 border-2 rounded-lg bg-white hover:bg-gray-50 cursor-pointer transition-colors">
+                                  <input
+                                    type="radio"
+                                    name="realEstateWealth"
+                                    value={value}
+                                    checked={getValue('preferences.wealth.realEstateWealth') === value}
+                                    onChange={() => update('preferences.wealth.realEstateWealth', value)}
+                                    className="w-5 h-5"
+                                  />
+                                  <span className="font-medium text-gray-800">{label}</span>
+                                </label>
+                              ))}
+                            </div>
+                          </div>
+
+                          {/* Patrimoine financier */}
+                          <div>
+                            <Label className="text-base font-medium mb-6 block">
+                              A combien estimez-vous votre patrimoine financier (hors immobilier) ?
+                            </Label>
+                            <div className="space-y-3">
+                              {[
+                                ['less_20k', 'Moins de 20 000 €'],
+                                ['20k_50k', 'Entre 20 000 € et 50 000 €'],
+                                ['50k_200k', 'Entre 50 000 € et 200 000 €'],
+                                ['more_200k', 'Plus de 200 000 €']
+                              ].map(([value, label]) => (
+                                <label key={value} className="flex items-center space-x-4 p-4 border-2 rounded-lg bg-white hover:bg-gray-50 cursor-pointer transition-colors">
+                                  <input
+                                    type="radio"
+                                    name="financialWealth"
+                                    value={value}
+                                    checked={getValue('preferences.wealth.financialWealth') === value}
+                                    onChange={() => update('preferences.wealth.financialWealth', value)}
+                                    className="w-5 h-5"
+                                  />
+                                  <span className="font-medium text-gray-800">{label}</span>
+                                </label>
+                              ))}
+                            </div>
+                          </div>
+                        </CardContent>
+                      </Card>
+
+                      <div className="flex items-center space-x-3 pt-4">
+                        <Button variant="outline" onClick={goPrev}>← Revenir</Button>
+                        <Button
+                          onClick={goNext}
+                          disabled={
+                            !getValue('preferences.wealth.realEstateWealth') ||
+                            !getValue('preferences.wealth.financialWealth')
+                          }
+                          className={
+                            (!getValue('preferences.wealth.realEstateWealth') ||
+                            !getValue('preferences.wealth.financialWealth')) ? 'opacity-50 cursor-not-allowed' : ''
+                          }
+                        >
+                          Étape suivante
+                        </Button>
+                      </div>
+                    </div>
+                  </section>
+                )}
+
+                {currentStep === 3 && currentSubStep === 5 && (
+                  <section>
+                    <h2 className="text-xl font-semibold mb-3">Capacité à subir des pertes</h2>
+
+                    <div className="max-w-3xl space-y-8">
+                      <Card>
+                        <CardContent className="p-6 space-y-8">
+                          {/* Remboursements d'emprunts */}
+                          <div>
+                            <Label className="text-base font-medium mb-6 block">
+                              Quel montant d'emprunt remboursez-vous chaque mois ?
+                            </Label>
+                            <div className="space-y-3">
+                              {[
+                                ['no_debt', 'Je ne suis pas endetté(e)'],
+                                ['less_500', 'Moins de 500 €'],
+                                ['500_1000', 'Entre 500 et 1 000 €'],
+                                ['1000_2000', 'Entre 1 000 € et 2 000 €'],
+                                ['more_2000', 'Plus de 2 000 €']
+                              ].map(([value, label]) => (
+                                <label key={value} className="flex items-center space-x-4 p-4 border-2 rounded-lg bg-white hover:bg-gray-50 cursor-pointer transition-colors">
+                                  <input
+                                    type="radio"
+                                    name="monthlyDebtPayments"
+                                    value={value}
+                                    checked={getValue('preferences.debtAndCharges.monthlyDebtPayments') === value}
+                                    onChange={() => update('preferences.debtAndCharges.monthlyDebtPayments', value)}
+                                    className="w-5 h-5"
+                                  />
+                                  <span className="font-medium text-gray-800">{label}</span>
+                                </label>
+                              ))}
+                            </div>
+                          </div>
+
+                          {/* Charges fixes mensuelles */}
+                          <div>
+                            <Label className="text-base font-medium mb-6 block">
+                              Quel est le montant de vos autres charges fixes mensuelles ?
+                            </Label>
+                            <div className="space-y-3">
+                              {[
+                                ['less_1000', 'Moins de 1 000 €'],
+                                ['1000_2000', 'Entre 1 000 € et 2 000 €'],
+                                ['2000_5000', 'Entre 2 000 € et 5 000 €'],
+                                ['more_5000', 'Plus de 5 000 €']
+                              ].map(([value, label]) => (
+                                <label key={value} className="flex items-center space-x-4 p-4 border-2 rounded-lg bg-white hover:bg-gray-50 cursor-pointer transition-colors">
+                                  <input
+                                    type="radio"
+                                    name="monthlyFixedCharges"
+                                    value={value}
+                                    checked={getValue('preferences.debtAndCharges.monthlyFixedCharges') === value}
+                                    onChange={() => update('preferences.debtAndCharges.monthlyFixedCharges', value)}
+                                    className="w-5 h-5"
+                                  />
+                                  <span className="font-medium text-gray-800">{label}</span>
+                                </label>
+                              ))}
+                            </div>
+                          </div>
+                        </CardContent>
+                      </Card>
+
+                      <div className="flex items-center space-x-3 pt-4">
+                        <Button variant="outline" onClick={goPrev}>← Revenir</Button>
+                        <Button
+                          onClick={goNext}
+                          disabled={
+                            !getValue('preferences.debtAndCharges.monthlyDebtPayments') ||
+                            !getValue('preferences.debtAndCharges.monthlyFixedCharges')
+                          }
+                          className={
+                            (!getValue('preferences.debtAndCharges.monthlyDebtPayments') ||
+                            !getValue('preferences.debtAndCharges.monthlyFixedCharges')) ? 'opacity-50 cursor-not-allowed' : ''
+                          }
+                        >
+                          Étape suivante
+                        </Button>
+                      </div>
+                    </div>
+                  </section>
+                )}
+
+                {currentStep === 3 && currentSubStep === 6 && (
+                  <section>
+                    <h2 className="text-xl font-semibold mb-3">Capacité à subir des pertes</h2>
+
+                    <div className="max-w-3xl space-y-8">
+                      <Card>
+                        <CardContent className="p-6 space-y-8">
+                          {/* Situation d'habitation */}
+                          <div>
+                            <Label className="text-base font-medium mb-6 block">
+                              Concernant votre habitation principale, quelle est votre situation actuelle ?
+                            </Label>
+                            <div className="space-y-3">
+                              {[
+                                ['tenant', 'Locataire'],
+                                ['accommodated_free', 'Hébergé(e) à titre gratuit'],
+                                ['owner_mortgage_5plus', 'Propriétaire et mon emprunt finit dans plus de 5 ans'],
+                                ['owner_mortgage_5minus', 'Propriétaire et mon emprunt finit dans moins de 5 ans'],
+                                ['owner_no_mortgage', 'Propriétaire sans remboursement d\'emprunt']
+                              ].map(([value, label]) => (
+                                <label key={value} className="flex items-center space-x-4 p-4 border-2 rounded-lg bg-white hover:bg-gray-50 cursor-pointer transition-colors">
+                                  <input
+                                    type="radio"
+                                    name="housingStatus"
+                                    value={value}
+                                    checked={getValue('preferences.housingSituation.housingStatus') === value}
+                                    onChange={() => update('preferences.housingSituation.housingStatus', value)}
+                                    className="w-5 h-5"
+                                  />
+                                  <span className="font-medium text-gray-800">{label}</span>
+                                </label>
+                              ))}
+                            </div>
+                          </div>
+
+                          {/* Capacité d'urgence */}
+                          <div>
+                            <Label className="text-base font-medium mb-6 block">
+                              Vos revenus et liquidités vous permettraient-ils de faire face à une dépense exceptionnelle et imprévue ?
+                            </Label>
+                            <div className="space-y-3">
+                              {[
+                                ['yes', 'Oui'],
+                                ['no', 'Non'],
+                                ['dont_know', 'Je ne sais pas']
+                              ].map(([value, label]) => (
+                                <label key={value} className="flex items-center space-x-4 p-4 border-2 rounded-lg bg-white hover:bg-gray-50 cursor-pointer transition-colors">
+                                  <input
+                                    type="radio"
+                                    name="emergencyCapacity"
+                                    value={value}
+                                    checked={getValue('preferences.housingSituation.emergencyCapacity') === value}
+                                    onChange={() => update('preferences.housingSituation.emergencyCapacity', value)}
+                                    className="w-5 h-5"
+                                  />
+                                  <span className="font-medium text-gray-800">{label}</span>
+                                </label>
+                              ))}
+                            </div>
+                          </div>
+                        </CardContent>
+                      </Card>
+
+                      <div className="flex items-center space-x-3 pt-4">
+                        <Button variant="outline" onClick={goPrev}>← Revenir</Button>
+                        <Button
+                          onClick={goNext}
+                          disabled={
+                            !getValue('preferences.housingSituation.housingStatus') ||
+                            !getValue('preferences.housingSituation.emergencyCapacity')
+                          }
+                          className={
+                            (!getValue('preferences.housingSituation.housingStatus') ||
+                            !getValue('preferences.housingSituation.emergencyCapacity')) ? 'opacity-50 cursor-not-allowed' : ''
+                          }
+                        >
+                          Étape suivante
+                        </Button>
+                      </div>
+                    </div>
+                  </section>
+                )}
+
+                {currentStep === 3 && currentSubStep === 7 && (
+                  <section>
+                    <h2 className="text-xl font-semibold mb-3">Capacité à subir des pertes</h2>
+
+                    <div className="max-w-3xl space-y-8">
+                      <Card>
+                        <CardContent className="p-6">
+                          <div>
+                            <Label className="text-base font-medium mb-6 block">
+                              Estimez-vous que vos revenus :
+                            </Label>
+                            <div className="space-y-4">
+                              {[
+                                ['increase_regularly', 'Vont augmenter régulièrement dans le temps'],
+                                ['remain_stable', 'Devraient rester à peu près stables'],
+                                ['decrease_irregular', 'Pourraient baisser ou être irréguliers'],
+                                ['dont_know', 'Je ne sais pas']
+                              ].map(([value, label]) => (
+                                <label key={value} className="flex items-center space-x-4 p-4 border-2 rounded-lg bg-white hover:bg-gray-50 cursor-pointer transition-colors">
+                                  <input
+                                    type="radio"
+                                    name="futureIncomeExpectation"
+                                    value={value}
+                                    checked={getValue('preferences.incomeOutlook.futureIncomeExpectation') === value}
+                                    onChange={() => update('preferences.incomeOutlook.futureIncomeExpectation', value)}
+                                    className="w-5 h-5"
+                                  />
+                                  <span className="font-medium text-gray-800">{label}</span>
+                                </label>
+                              ))}
+                            </div>
+                          </div>
+                        </CardContent>
+                      </Card>
+
+                      <div className="flex items-center space-x-3 pt-4">
+                        <Button variant="outline" onClick={goPrev}>← Revenir</Button>
+                        <Button
+                          onClick={goNext}
+                          disabled={!getValue('preferences.incomeOutlook.futureIncomeExpectation')}
+                          className={!getValue('preferences.incomeOutlook.futureIncomeExpectation') ? 'opacity-50 cursor-not-allowed' : ''}
+                        >
+                          Étape suivante
+                        </Button>
+                      </div>
+                    </div>
+                  </section>
+                )}
+
+                {currentStep === 3 && currentSubStep === 8 && (
+                  <section>
+                    <h2 className="text-xl font-semibold mb-3">Résultats</h2>
+                    <h3 className="text-lg font-medium mb-6">Capacité à subir des pertes</h3>
+
+                    <div className="max-w-4xl space-y-8">
+                      {/* Badges de capacité à subir des pertes */}
+                      <Card>
+                        <CardContent className="p-6">
+                          <div className="flex items-center justify-center space-x-4 mb-6 flex-wrap gap-y-4">
+                            {['tres_faible', 'faible', 'moyenne', 'elevee', 'tres_elevee'].map((capacity) => {
+                              const isActive = evaluateLossCapacity() === capacity;
+                              const labels = {
+                                tres_faible: 'Très faible',
+                                faible: 'Faible',
+                                moyenne: 'Moyenne',
+                                elevee: 'Élevée',
+                                tres_elevee: 'Très élevée'
+                              };
+                              const colors = {
+                                tres_faible: 'border-red-600 bg-red-50 text-red-700',
+                                faible: 'border-orange-500 bg-orange-50 text-orange-700',
+                                moyenne: 'border-yellow-500 bg-yellow-50 text-yellow-700',
+                                elevee: 'border-green-500 bg-green-50 text-green-700',
+                                tres_elevee: 'border-emerald-600 bg-emerald-50 text-emerald-700'
+                              };
+                              return (
+                                <div
+                                  key={capacity}
+                                  className={`px-4 py-3 rounded-lg border-2 font-semibold text-sm ${
+                                    isActive
+                                      ? colors[capacity as keyof typeof colors]
+                                      : 'border-gray-200 bg-gray-50 text-gray-500'
+                                  }`}
+                                >
+                                  {labels[capacity as keyof typeof labels]}
+                                </div>
+                              );
+                            })}
+                          </div>
+
+                          <div className="bg-orange-50 p-6 rounded-lg border border-orange-200">
+                            <p className="text-orange-800">
+                              <strong>D'après votre situation financière et patrimoniale, votre capacité à subir des pertes est {
+                                evaluateLossCapacity() === 'tres_faible' ? 'très faible' :
+                                evaluateLossCapacity() === 'faible' ? 'faible' :
+                                evaluateLossCapacity() === 'moyenne' ? 'moyenne' :
+                                evaluateLossCapacity() === 'elevee' ? 'élevée' : 'très élevée'
+                              }.</strong>
+                            </p>
+                          </div>
+                        </CardContent>
+                      </Card>
+
+                      <div className="flex items-center justify-between pt-4">
+                        <Button variant="outline" onClick={goPrev}>← Revenir</Button>
+                        <Button variant="outline" onClick={() => setCurrentSubStep(2)}>Modifier la capacité à subir des pertes</Button>
+                        <Button onClick={goNext}>Étape suivante</Button>
+                      </div>
+                    </div>
+                  </section>
+                )}
+
+                {currentStep === 4 && currentSubStep === 0 && (
+                  <section>
+                    <h2 className="text-xl font-semibold mb-3">Votre profil investisseur extra-financier</h2>
+                    <h3 className="text-lg font-medium mb-6">Comment tenir compte de vos préférences extra-financières ?</h3>
+
+                    <div className="max-w-3xl space-y-8">
+                      <Card>
+                        <CardContent className="p-6">
+                          <div>
+                            <Label className="text-base font-medium mb-6 block">
+                              Souhaitez-vous préciser vos préférences en matière de durabilité ?
+                            </Label>
+                            <div className="space-y-4">
+                              {[
+                                ['yes', 'Oui'],
+                                ['no', 'Non']
+                              ].map(([value, label]) => (
+                                <label key={value} className="flex items-center space-x-4 p-5 border-2 rounded-lg bg-white hover:bg-gray-50 cursor-pointer transition-colors">
+                                  <input
+                                    type="radio"
+                                    name="specifyDurabilityPreferences"
+                                    value={value}
+                                    checked={getValue('extraFinancial.specifyDurabilityPreferences') === value}
+                                    onChange={() => update('extraFinancial.specifyDurabilityPreferences', value)}
+                                    className="w-5 h-5"
+                                  />
+                                  <span className="font-medium text-gray-800 text-lg">{label}</span>
+                                </label>
+                              ))}
+                            </div>
+                          </div>
+                        </CardContent>
+                      </Card>
+
+                      <div className="flex items-center space-x-3 pt-4">
+                        <Button variant="outline" onClick={goPrev}>← Revenir</Button>
+                        <Button
+                          onClick={goNext}
+                          disabled={!getValue('extraFinancial.specifyDurabilityPreferences')}
+                          className={!getValue('extraFinancial.specifyDurabilityPreferences') ? 'opacity-50 cursor-not-allowed' : ''}
+                        >
+                          Étape suivante
+                        </Button>
+                      </div>
+                    </div>
+                  </section>
+                )}
+
+                {currentStep === 4 && currentSubStep === 1 && (
+                  <section>
+                    <h2 className="text-xl font-semibold mb-3">Votre profil investisseur extra-financier</h2>
+                    <h3 className="text-lg font-medium mb-6">Comment tenir compte de vos préférences extra-financières ?</h3>
+
+                    <div className="max-w-3xl space-y-8">
+                      {/* Affichage de la question précédente */}
+                      <div className="bg-gray-50 p-4 rounded-lg border">
+                        <p className="text-sm text-gray-600 mb-2">Souhaitez-vous préciser vos préférences en matière de durabilité ?</p>
+                        <p className="font-medium text-gray-800">
+                          {getValue('extraFinancial.specifyDurabilityPreferences') === 'yes' ? 'Oui' : 'Non'}
+                        </p>
+                      </div>
+
+                      {getValue('extraFinancial.specifyDurabilityPreferences') === 'yes' ? (
+                        // Contenu si "Oui" - Sélection des approches
+                        <Card>
+                          <CardContent className="p-6">
+                            <div>
+                              <Label className="text-base font-medium mb-6 block">
+                                Sélectionnez une ou plusieurs approche(s) extra-financière(s) :
+                              </Label>
+                              <div className="space-y-4">
+                                {/* Activités environnementales */}
+                                <label className="flex items-start space-x-4 p-5 border-2 rounded-lg bg-white hover:bg-gray-50 cursor-pointer transition-colors">
+                                  <input
+                                    type="checkbox"
+                                    checked={getValue('extraFinancial.extraFinancialApproaches.environmentalActivities')}
+                                    onChange={() => toggle('extraFinancial.extraFinancialApproaches.environmentalActivities')}
+                                    className="w-5 h-5 mt-1"
+                                  />
+                                  <div className="flex-1">
+                                    <h4 className="font-bold text-lg text-green-700 mb-2">Activités environnementales</h4>
+                                    <p className="text-gray-700">
+                                      Vous souhaitez investir dans des activités ayant un impact positif sur l'environnement.
+                                    </p>
+                                  </div>
+                                </label>
+
+                                {/* Objectif environnemental ou social */}
+                                <label className="flex items-start space-x-4 p-5 border-2 rounded-lg bg-white hover:bg-gray-50 cursor-pointer transition-colors">
+                                  <input
+                                    type="checkbox"
+                                    checked={getValue('extraFinancial.extraFinancialApproaches.environmentalSocialObjective')}
+                                    onChange={() => toggle('extraFinancial.extraFinancialApproaches.environmentalSocialObjective')}
+                                    className="w-5 h-5 mt-1"
+                                  />
+                                  <div className="flex-1">
+                                    <h4 className="font-bold text-lg text-blue-700 mb-2">Objectif environnemental ou social</h4>
+                                    <p className="text-gray-700">
+                                      Vous souhaitez que vos investissements répondent à un objectif environnemental et/ou social.
+                                    </p>
+                                  </div>
+                                </label>
+
+                                {/* Incidences négatives */}
+                                <label className="flex items-start space-x-4 p-5 border-2 rounded-lg bg-white hover:bg-gray-50 cursor-pointer transition-colors">
+                                  <input
+                                    type="checkbox"
+                                    checked={getValue('extraFinancial.extraFinancialApproaches.negativeImpacts')}
+                                    onChange={() => toggle('extraFinancial.extraFinancialApproaches.negativeImpacts')}
+                                    className="w-5 h-5 mt-1"
+                                  />
+                                  <div className="flex-1">
+                                    <h4 className="font-bold text-lg text-orange-700 mb-2">Incidences négatives</h4>
+                                    <p className="text-gray-700">
+                                      Vous souhaitez sélectionner vos investissements en fonction de leur prise en compte des principales incidences négatives.
+                                    </p>
+                                  </div>
+                                </label>
+                              </div>
+                            </div>
+                          </CardContent>
+                        </Card>
+                      ) : (
+                        // Contenu si "Non" - Message d'information
+                        <Card className="border-2 border-blue-200 bg-blue-50">
+                          <CardContent className="p-6">
+                            <div className="flex items-start space-x-4">
+                              <div className="w-6 h-6 bg-blue-500 rounded-full flex items-center justify-center flex-shrink-0 mt-1">
+                                <span className="text-white text-sm font-bold">i</span>
+                              </div>
+                              <div>
+                                <h4 className="font-bold text-lg text-blue-800 mb-3">Message d'information</h4>
+                                <p className="text-blue-700">
+                                  En sélectionnant non, vous reconnaissez ne pas avoir d'exigence minimum concernant l'intégration de produits financiers durables à vos investissements.
+                                </p>
+                              </div>
+                            </div>
+                          </CardContent>
+                        </Card>
+                      )}
+
+                      <div className="flex items-center space-x-3 pt-4">
+                        <Button variant="outline" onClick={goPrev}>← Revenir</Button>
+                        <Button onClick={goNext}>Étape suivante</Button>
+                      </div>
+                    </div>
+                  </section>
+                )}
+
+                {currentStep === 4 && currentSubStep === 2 && (
+                  <section>
+                    <h2 className="text-xl font-semibold mb-3">Votre profil investisseur extra-financier</h2>
+
+                    <div className="max-w-3xl space-y-8">
+                      <Card>
+                        <CardContent className="p-6 space-y-6">
+                          <div>
+                            <Label className="text-base font-medium mb-6 block">
+                              Quelle part de votre investissement souhaitez-vous consacrer à des activités contribuant à un objectif environnemental ou social ?
+                            </Label>
+                            <div className="space-y-4">
+                              {/* 5% option */}
+                              <label className="flex items-start space-x-4 p-5 border-2 rounded-lg bg-white hover:bg-gray-50 cursor-pointer transition-colors">
+                                <input
+                                  type="radio"
+                                  name="environmentalSocialPercentage"
+                                  value="5"
+                                  checked={getValue('extraFinancial.investmentAllocation.environmentalSocialPercentage') === '5'}
+                                  onChange={() => update('extraFinancial.investmentAllocation.environmentalSocialPercentage', '5')}
+                                  className="w-5 h-5 mt-1"
+                                />
+                                <div className="flex-1">
+                                  <p className="text-gray-700 mb-2">
+                                    Vous souhaitez y consacrer au moins 5 % de votre investissement.
+                                  </p>
+                                  <div className="bg-green-100 px-3 py-2 rounded-lg inline-block">
+                                    <span className="text-2xl font-bold text-green-700">5 %</span>
+                                  </div>
+                                </div>
+                              </label>
+
+                              {/* 25% option */}
+                              <label className="flex items-start space-x-4 p-5 border-2 rounded-lg bg-white hover:bg-gray-50 cursor-pointer transition-colors">
+                                <input
+                                  type="radio"
+                                  name="environmentalSocialPercentage"
+                                  value="25"
+                                  checked={getValue('extraFinancial.investmentAllocation.environmentalSocialPercentage') === '25'}
+                                  onChange={() => update('extraFinancial.investmentAllocation.environmentalSocialPercentage', '25')}
+                                  className="w-5 h-5 mt-1"
+                                />
+                                <div className="flex-1">
+                                  <p className="text-gray-700 mb-2">
+                                    Vous souhaitez y consacrer au moins 25 % de votre investissement.
+                                  </p>
+                                  <div className="bg-blue-100 px-3 py-2 rounded-lg inline-block">
+                                    <span className="text-2xl font-bold text-blue-700">25 %</span>
+                                  </div>
+                                </div>
+                              </label>
+
+                              {/* 50% option */}
+                              <label className="flex items-start space-x-4 p-5 border-2 rounded-lg bg-white hover:bg-gray-50 cursor-pointer transition-colors">
+                                <input
+                                  type="radio"
+                                  name="environmentalSocialPercentage"
+                                  value="50"
+                                  checked={getValue('extraFinancial.investmentAllocation.environmentalSocialPercentage') === '50'}
+                                  onChange={() => update('extraFinancial.investmentAllocation.environmentalSocialPercentage', '50')}
+                                  className="w-5 h-5 mt-1"
+                                />
+                                <div className="flex-1">
+                                  <p className="text-gray-700 mb-2">
+                                    Vous souhaitez y consacrer au moins 50 % de votre investissement.
+                                  </p>
+                                  <div className="bg-purple-100 px-3 py-2 rounded-lg inline-block">
+                                    <span className="text-2xl font-bold text-purple-700">50 %</span>
+                                  </div>
+                                </div>
+                              </label>
+                            </div>
+                          </div>
+
+                          {/* Information message */}
+                          <div className="bg-blue-50 p-6 rounded-lg border border-blue-200">
+                            <p className="text-blue-800 text-sm mb-2">
+                              <strong>Vous avez indiqué vouloir consacrer une partie de votre investissement à des activités contribuant à un objectif environnemental ou social. Ces activités appartiennent à la catégorie SFDR.</strong>
+                            </p>
+                            <p className="text-blue-700 text-sm">
+                              Veuillez noter que ce choix est susceptible d'impacter la liste des supports dans lesquels vous pourriez investir.
+                            </p>
+                          </div>
+                        </CardContent>
+                      </Card>
+
+                      <div className="flex items-center space-x-3 pt-4">
+                        <Button variant="outline" onClick={goPrev}>← Revenir</Button>
+                        <Button
+                          onClick={goNext}
+                          disabled={!getValue('extraFinancial.investmentAllocation.environmentalSocialPercentage')}
+                          className={!getValue('extraFinancial.investmentAllocation.environmentalSocialPercentage') ? 'opacity-50 cursor-not-allowed' : ''}
+                        >
+                          Étape suivante
+                        </Button>
+                      </div>
+                    </div>
+                  </section>
+                )}
+
+                {currentStep === 4 && currentSubStep === 3 && (
+                  <section>
+                    <h2 className="text-xl font-semibold mb-3">Récapitulatif de votre profil extra-financier</h2>
+                    <div className="max-w-3xl space-y-8">
+                      <Card>
+                        <CardContent className="p-6">
+                          <h3 className="text-lg font-medium mb-6">Évaluation de votre sensibilité extra-financière</h3>
+
+                          {/* Sensibilité basée sur les réponses */}
+                          <div className="mb-6">
+                            <p className="text-gray-700 mb-4">
+                              Sur la base de vos réponses, votre profil de sensibilité extra-financière est :
+                            </p>
+                            <div className="inline-block">
+                              {getValue('extraFinancial.specifyDurabilityPreferences') === 'no' ? (
+                                <div className="bg-gray-100 px-4 py-2 rounded-lg">
+                                  <span className="text-lg font-semibold text-gray-700">Neutre</span>
+                                </div>
+                              ) : (
+                                getValue('extraFinancial.investmentAllocation.environmentalSocialPercentage') === '5' ? (
+                                  <div className="bg-blue-100 px-4 py-2 rounded-lg">
+                                    <span className="text-lg font-semibold text-blue-700">Modérée</span>
+                                  </div>
+                                ) : getValue('extraFinancial.investmentAllocation.environmentalSocialPercentage') === '25' ? (
+                                  <div className="bg-green-100 px-4 py-2 rounded-lg">
+                                    <span className="text-lg font-semibold text-green-700">Significative</span>
+                                  </div>
+                                ) : (
+                                  <div className="bg-purple-100 px-4 py-2 rounded-lg">
+                                    <span className="text-lg font-semibold text-purple-700">Forte</span>
+                                  </div>
+                                )
+                              )}
+                            </div>
+                          </div>
+
+                          {/* Allocation d'investissement */}
+                          {getValue('extraFinancial.specifyDurabilityPreferences') === 'yes' && (
+                            <div className="bg-gray-50 p-6 rounded-lg">
+                              <h4 className="font-medium mb-4">Allocation d'investissement souhaitée</h4>
+                              <div className="flex items-center space-x-4">
+                                <div className="text-center">
+                                  <div className="text-3xl font-bold text-green-600">
+                                    {getValue('extraFinancial.investmentAllocation.environmentalSocialPercentage')}%
+                                  </div>
+                                  <p className="text-sm text-gray-600">Activités contribuant à un objectif environnemental ou social</p>
+                                </div>
+                                <div className="text-center">
+                                  <div className="text-3xl font-bold text-blue-600">
+                                    {100 - parseInt(getValue('extraFinancial.investmentAllocation.environmentalSocialPercentage') || '0')}%
+                                  </div>
+                                  <p className="text-sm text-gray-600">Autres investissements</p>
+                                </div>
+                              </div>
+                            </div>
+                          )}
+
+                          {/* Approches sélectionnées */}
+                          {getValue('extraFinancial.specifyDurabilityPreferences') === 'yes' && (
+                            <div className="mt-6">
+                              <h4 className="font-medium mb-4">Approches de durabilité sélectionnées</h4>
+                              <div className="space-y-2">
+                                {getValue('extraFinancial.durabilityApproaches.exclusion') && (
+                                  <div className="flex items-center space-x-2">
+                                    <div className="w-2 h-2 bg-green-500 rounded-full"></div>
+                                    <span className="text-sm">Exclusion</span>
+                                  </div>
+                                )}
+                                {getValue('extraFinancial.durabilityApproaches.bestInClass') && (
+                                  <div className="flex items-center space-x-2">
+                                    <div className="w-2 h-2 bg-green-500 rounded-full"></div>
+                                    <span className="text-sm">Best-in-class</span>
+                                  </div>
+                                )}
+                                {getValue('extraFinancial.durabilityApproaches.integration') && (
+                                  <div className="flex items-center space-x-2">
+                                    <div className="w-2 h-2 bg-green-500 rounded-full"></div>
+                                    <span className="text-sm">Intégration ESG</span>
+                                  </div>
+                                )}
+                                {getValue('extraFinancial.durabilityApproaches.thematic') && (
+                                  <div className="flex items-center space-x-2">
+                                    <div className="w-2 h-2 bg-green-500 rounded-full"></div>
+                                    <span className="text-sm">Investissement thématique</span>
+                                  </div>
+                                )}
+                                {getValue('extraFinancial.durabilityApproaches.impact') && (
+                                  <div className="flex items-center space-x-2">
+                                    <div className="w-2 h-2 bg-green-500 rounded-full"></div>
+                                    <span className="text-sm">Investissement d'impact</span>
+                                  </div>
+                                )}
+                              </div>
+                            </div>
+                          )}
+                        </CardContent>
+                      </Card>
+
+                      <div className="flex items-center justify-between pt-4">
+                        <Button variant="outline" onClick={goPrev}>← Revenir</Button>
+                        <Button variant="outline" onClick={() => setCurrentSubStep(0)}>Modifier le profil extra-financier</Button>
+                        <Button onClick={goNext}>Terminer</Button>
                       </div>
                     </div>
                   </section>
@@ -1735,28 +3077,362 @@ export default function SimulateurProfilInvestisseur() {
                 {currentStep === 6 && (
                   <section>
                     <h2 className="text-xl font-semibold mb-3">Récapitulatif</h2>
-                    <p className="text-gray-700 mb-6">Voici un résumé de vos réponses :</p>
+                    <div className="max-w-6xl space-y-8">
 
-                    <div className="bg-gray-50 p-6 rounded-lg border max-w-4xl overflow-x-auto">
-                      <pre className="whitespace-pre-wrap text-sm text-gray-800">
-                        {JSON.stringify(form, null, 2)}
-                      </pre>
-                    </div>
+                      {/* Connaissance et expérience des marchés financiers */}
+                      <Card>
+                        <CardContent className="p-6">
+                          <h3 className="text-lg font-semibold mb-4">Connaissance et expérience des marchés financiers</h3>
 
-                    <div className="mt-6 flex flex-wrap items-center gap-3">
-                      <Button variant="outline" onClick={goPrev}>← Revenir</Button>
-                      <Button onClick={submit} className="bg-green-600 hover:bg-green-700">
-                        Soumettre le questionnaire
-                      </Button>
-                      <Button
-                        variant="destructive"
-                        onClick={() => {
-                          localStorage.removeItem('investor_form_v1');
-                          setForm(defaultForm());
-                        }}
-                      >
-                        Réinitialiser
-                      </Button>
+                          {/* Profil de connaissance */}
+                          <div className="flex items-center justify-center space-x-4 mb-6 flex-wrap gap-y-4">
+                            {['novice', 'informed', 'experienced'].map((level) => {
+                              const isActive = evaluateKnowledgeLevel() === level;
+                              const labels = {
+                                novice: 'Novice',
+                                informed: 'Informé',
+                                experienced: 'Expérimenté'
+                              };
+                              const colors = {
+                                novice: 'border-red-500 bg-red-50 text-red-700',
+                                informed: 'border-blue-500 bg-blue-50 text-blue-700',
+                                experienced: 'border-green-500 bg-green-50 text-green-700'
+                              };
+                              return (
+                                <div
+                                  key={level}
+                                  className={`px-4 py-3 rounded-lg border-2 font-semibold text-sm ${
+                                    isActive
+                                      ? colors[level as keyof typeof colors]
+                                      : 'border-gray-200 bg-gray-50 text-gray-500'
+                                  }`}
+                                >
+                                  {labels[level as keyof typeof labels]}
+                                </div>
+                              );
+                            })}
+                          </div>
+
+                          <div className="bg-blue-50 p-4 rounded-lg border border-blue-200 mb-6">
+                            <p className="text-blue-800 text-sm">
+                              <strong>Votre profil est {
+                                evaluateKnowledgeLevel() === 'novice' ? 'novice' :
+                                evaluateKnowledgeLevel() === 'informed' ? 'informé' : 'expérimenté'
+                              }.</strong>{' '}
+                              {evaluateKnowledgeLevel() === 'novice' &&
+                                'Vous découvrez les marchés financiers et les produits d\'investissement. Une approche prudente et éducative est recommandée.'
+                              }
+                              {evaluateKnowledgeLevel() === 'informed' &&
+                                'Vous êtes plutôt à l\'aise avec les produits les plus simples et connaissez certains produits financiers plus complexes sans toutefois en maîtriser précisément tous leurs mécanismes.'
+                              }
+                              {evaluateKnowledgeLevel() === 'experienced' &&
+                                'Vous maîtrisez bien les produits financiers et comprenez leurs mécanismes. Vous pouvez accéder à une gamme étendue de produits d\'investissement.'
+                              }
+                            </p>
+                          </div>
+
+                          {/* Types de produits */}
+                          <div className="space-y-4">
+                            <h4 className="font-medium">Connaissance selon le type de produit</h4>
+
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
+                              <div>
+                                <h5 className="font-medium text-green-700 mb-2">Connaissance validée avec le questionnaire</h5>
+                                <ul className="space-y-1 text-gray-700">
+                                  <li>• Assurance-vie et capitalisation</li>
+                                  <li>• Épargne retraite et entreprise</li>
+                                </ul>
+                              </div>
+
+                              <div>
+                                <h5 className="font-medium text-red-700 mb-2">Connaissance invalidée avec le questionnaire</h5>
+                                <ul className="space-y-1 text-gray-700">
+                                  <li>• PEA et comptes-titres</li>
+                                </ul>
+                              </div>
+
+                              <div className="md:col-span-2">
+                                <h5 className="font-medium text-gray-700 mb-2">Connaissance non vérifiée avec le questionnaire</h5>
+                                <div className="grid grid-cols-2 gap-2 text-gray-600">
+                                  <ul className="space-y-1">
+                                    <li>• Fonds euros</li>
+                                    <li>• Produits monétaires</li>
+                                    <li>• Produits obligataires</li>
+                                    <li>• Produits actions</li>
+                                    <li>• SCPI</li>
+                                    <li>• OPCI</li>
+                                    <li>• Capital investissement ou Private equity</li>
+                                    <li>• Produits structurés</li>
+                                    <li>• SOFICA</li>
+                                    <li>• Produits obligataires complexes</li>
+                                    <li>• Produits actions complexes</li>
+                                  </ul>
+                                  <ul className="space-y-1">
+                                    <li>• Tracker</li>
+                                    <li>• CFD (contrats sur la différence)</li>
+                                    <li>• Futures</li>
+                                    <li>• Options</li>
+                                    <li>• Warrants</li>
+                                    <li>• Turbos</li>
+                                    <li>• Certificats à gestion active (AMC)</li>
+                                    <li>• Cryptomonnaies</li>
+                                  </ul>
+                                </div>
+                              </div>
+                            </div>
+                          </div>
+
+                          <div className="flex justify-end pt-4">
+                            <Button variant="outline" onClick={() => {setCurrentStep(1); setCurrentSubStep(0);}}>
+                              Modifier la connaissance et expérience
+                            </Button>
+                          </div>
+                        </CardContent>
+                      </Card>
+
+                      {/* Profil de risque */}
+                      <Card>
+                        <CardContent className="p-6">
+                          <h3 className="text-lg font-semibold mb-4">Profil de risque</h3>
+
+                          <div className="flex items-center justify-center space-x-4 mb-6 flex-wrap gap-y-4">
+                            {['securitaire', 'defensif', 'equilibre', 'dynamique', 'offensif'].map((profile) => {
+                              const isActive = evaluateRiskProfile() === profile;
+                              const labels = {
+                                securitaire: 'Sécuritaire',
+                                defensif: 'Défensif',
+                                equilibre: 'Équilibré',
+                                dynamique: 'Dynamique',
+                                offensif: 'Offensif'
+                              };
+                              const colors = {
+                                securitaire: 'border-green-500 bg-green-50 text-green-700',
+                                defensif: 'border-blue-500 bg-blue-50 text-blue-700',
+                                equilibre: 'border-yellow-500 bg-yellow-50 text-yellow-700',
+                                dynamique: 'border-orange-500 bg-orange-50 text-orange-700',
+                                offensif: 'border-red-500 bg-red-50 text-red-700'
+                              };
+                              return (
+                                <div
+                                  key={profile}
+                                  className={`px-4 py-3 rounded-lg border-2 font-semibold text-sm ${
+                                    isActive
+                                      ? colors[profile as keyof typeof colors]
+                                      : 'border-gray-200 bg-gray-50 text-gray-500'
+                                  }`}
+                                >
+                                  {labels[profile as keyof typeof labels]}
+                                </div>
+                              );
+                            })}
+                          </div>
+
+                          <div className="bg-blue-50 p-4 rounded-lg border border-blue-200 mb-4">
+                            <p className="text-blue-800 text-sm">
+                              <strong>Votre profil est {
+                                evaluateRiskProfile() === 'securitaire' ? 'sécuritaire' :
+                                evaluateRiskProfile() === 'defensif' ? 'défensif' :
+                                evaluateRiskProfile() === 'equilibre' ? 'équilibré' :
+                                evaluateRiskProfile() === 'dynamique' ? 'dynamique' : 'offensif'
+                              }.</strong>{' '}
+                              {evaluateRiskProfile() === 'defensif' &&
+                                'Vous souhaitez prendre le minimum de risques dans vos placements afin de réaliser vos projets en toute sécurité. Votre faible tolérance au risque impose la sélection de supports à faible volatilité.'
+                              }
+                            </p>
+                          </div>
+
+                          <div className="flex justify-end">
+                            <Button variant="outline" onClick={() => {setCurrentStep(2); setCurrentSubStep(0);}}>
+                              Modifier le profil de risque
+                            </Button>
+                          </div>
+                        </CardContent>
+                      </Card>
+
+                      {/* Préférences de placement */}
+                      <Card>
+                        <CardContent className="p-6">
+                          <h3 className="text-lg font-semibold mb-4">Préférences de placement</h3>
+
+                          <div className="space-y-4">
+                            <div>
+                              <h4 className="font-medium text-gray-700 mb-2">Objectifs d'investissement exclus</h4>
+                              <div className="grid grid-cols-2 gap-2 text-sm text-gray-600">
+                                <ul className="space-y-1">
+                                  {getValue('preferences.objectivesNotSuitable.preservationCapital') && <li>• Préservation du capital</li>}
+                                  {getValue('preferences.objectivesNotSuitable.capitalGrowth') && <li>• Croissance du capital</li>}
+                                  {getValue('preferences.objectivesNotSuitable.income') && <li>• Revenus</li>}
+                                </ul>
+                                <ul className="space-y-1">
+                                  {getValue('preferences.objectivesNotSuitable.hedging') && <li>• Hedging (couverture de risque)</li>}
+                                  {getValue('preferences.objectivesNotSuitable.leverage') && <li>• Exposition à effet de levier</li>}
+                                </ul>
+                              </div>
+                            </div>
+
+                            <div>
+                              <h4 className="font-medium text-gray-700 mb-2">Horizon de placement</h4>
+                              <div className="bg-gray-50 px-4 py-2 rounded-lg inline-block">
+                                <span className="text-sm text-gray-700">
+                                  {getValue('preferences.investmentHorizon') === 'very_short' && 'Placement très court terme'}
+                                  {getValue('preferences.investmentHorizon') === 'short' && 'Placement court terme'}
+                                  {getValue('preferences.investmentHorizon') === 'medium' && 'Placement moyen terme'}
+                                  {getValue('preferences.investmentHorizon') === 'long' && 'Placement long terme'}
+                                </span>
+                              </div>
+                            </div>
+                          </div>
+
+                          <div className="flex justify-end pt-4">
+                            <Button variant="outline" onClick={() => {setCurrentStep(3); setCurrentSubStep(0);}}>
+                              Modifier les préférences de placement
+                            </Button>
+                          </div>
+                        </CardContent>
+                      </Card>
+
+                      {/* Capacité à subir des pertes */}
+                      <Card>
+                        <CardContent className="p-6">
+                          <h3 className="text-lg font-semibold mb-4">Capacité à subir des pertes</h3>
+
+                          <div className="flex items-center justify-center space-x-4 mb-6 flex-wrap gap-y-4">
+                            {['tres_faible', 'faible', 'moyenne', 'elevee', 'tres_elevee'].map((capacity) => {
+                              const isActive = evaluateLossCapacity() === capacity;
+                              const labels = {
+                                tres_faible: 'Très faible',
+                                faible: 'Faible',
+                                moyenne: 'Moyenne',
+                                elevee: 'Élevée',
+                                tres_elevee: 'Très élevée'
+                              };
+                              const colors = {
+                                tres_faible: 'border-red-500 bg-red-50 text-red-700',
+                                faible: 'border-orange-500 bg-orange-50 text-orange-700',
+                                moyenne: 'border-yellow-500 bg-yellow-50 text-yellow-700',
+                                elevee: 'border-blue-500 bg-blue-50 text-blue-700',
+                                tres_elevee: 'border-green-500 bg-green-50 text-green-700'
+                              };
+                              return (
+                                <div
+                                  key={capacity}
+                                  className={`px-4 py-3 rounded-lg border-2 font-semibold text-sm ${
+                                    isActive
+                                      ? colors[capacity as keyof typeof colors]
+                                      : 'border-gray-200 bg-gray-50 text-gray-500'
+                                  }`}
+                                >
+                                  {labels[capacity as keyof typeof labels]}
+                                </div>
+                              );
+                            })}
+                          </div>
+
+                          <div className="bg-blue-50 p-4 rounded-lg border border-blue-200 mb-4">
+                            <p className="text-blue-800 text-sm">
+                              <strong>D'après votre situation financière et patrimoniale, votre capacité à subir des pertes est {
+                                evaluateLossCapacity() === 'tres_faible' ? 'très faible' :
+                                evaluateLossCapacity() === 'faible' ? 'faible' :
+                                evaluateLossCapacity() === 'moyenne' ? 'moyenne' :
+                                evaluateLossCapacity() === 'elevee' ? 'élevée' : 'très élevée'
+                              }.</strong>
+                            </p>
+                          </div>
+
+                          <div className="flex justify-end">
+                            <Button variant="outline" onClick={() => {setCurrentStep(3); setCurrentSubStep(2);}}>
+                              Modifier la capacité à subir des pertes
+                            </Button>
+                          </div>
+                        </CardContent>
+                      </Card>
+
+                      {/* Sensibilité extra-financière */}
+                      <Card>
+                        <CardContent className="p-6">
+                          <h3 className="text-lg font-semibold mb-4">Sensibilité extra-financière</h3>
+
+                          <div className="flex items-center justify-center space-x-4 mb-6 flex-wrap gap-y-4">
+                            {['neutre', 'moderee', 'significative', 'forte'].map((sensitivity) => {
+                              const currentSensitivity = getValue('extraFinancial.specifyDurabilityPreferences') === 'no' ? 'neutre' :
+                                getValue('extraFinancial.investmentAllocation.environmentalSocialPercentage') === '5' ? 'moderee' :
+                                getValue('extraFinancial.investmentAllocation.environmentalSocialPercentage') === '25' ? 'significative' : 'forte';
+                              const isActive = currentSensitivity === sensitivity;
+                              const labels = {
+                                neutre: 'Neutre',
+                                moderee: 'Modérée',
+                                significative: 'Significative',
+                                forte: 'Forte'
+                              };
+                              const colors = {
+                                neutre: 'border-gray-500 bg-gray-50 text-gray-700',
+                                moderee: 'border-blue-500 bg-blue-50 text-blue-700',
+                                significative: 'border-green-500 bg-green-50 text-green-700',
+                                forte: 'border-purple-500 bg-purple-50 text-purple-700'
+                              };
+                              return (
+                                <div
+                                  key={sensitivity}
+                                  className={`px-4 py-3 rounded-lg border-2 font-semibold text-sm ${
+                                    isActive
+                                      ? colors[sensitivity as keyof typeof colors]
+                                      : 'border-gray-200 bg-gray-50 text-gray-500'
+                                  }`}
+                                >
+                                  {labels[sensitivity as keyof typeof labels]}
+                                </div>
+                              );
+                            })}
+                          </div>
+
+                          <div className="bg-blue-50 p-4 rounded-lg border border-blue-200 mb-4">
+                            <p className="text-blue-800 text-sm">
+                              <strong>D'après les réponses apportées au questionnaire, votre sensibilité extra-financière est {
+                                getValue('extraFinancial.specifyDurabilityPreferences') === 'no' ? 'neutre' :
+                                getValue('extraFinancial.investmentAllocation.environmentalSocialPercentage') === '5' ? 'modérée' :
+                                getValue('extraFinancial.investmentAllocation.environmentalSocialPercentage') === '25' ? 'significative' : 'forte'
+                              }.</strong>
+                            </p>
+                          </div>
+
+                          {getValue('extraFinancial.specifyDurabilityPreferences') === 'yes' && (
+                            <div className="space-y-4">
+                              <div>
+                                <h4 className="font-medium text-gray-700 mb-2">Objectif environnemental ou social</h4>
+                                <div className="bg-green-50 p-4 rounded-lg border border-green-200">
+                                  <div className="text-center">
+                                    <div className="text-2xl font-bold text-green-600 mb-2">
+                                      {getValue('extraFinancial.investmentAllocation.environmentalSocialPercentage')} %
+                                    </div>
+                                    <p className="text-sm text-green-700">
+                                      Vous souhaitez qu'au moins {getValue('extraFinancial.investmentAllocation.environmentalSocialPercentage')} % de votre investissement réponde à un objectif d'amélioration de l'environnement ou du social
+                                    </p>
+                                  </div>
+                                </div>
+                              </div>
+                            </div>
+                          )}
+
+                          <div className="flex justify-end pt-4">
+                            <Button variant="outline" onClick={() => {setCurrentStep(4); setCurrentSubStep(0);}}>
+                              Modifier le profil extra-financier
+                            </Button>
+                          </div>
+                        </CardContent>
+                      </Card>
+
+                      {/* Actions finales */}
+                      <div className="flex items-center justify-between pt-6">
+                        <Button variant="outline" onClick={goPrev}>← Revenir</Button>
+                        <div className="space-x-4">
+                          <Button variant="outline">
+                            Fermer
+                          </Button>
+                          <Button className="bg-green-600 hover:bg-green-700">
+                            Générer le PDF
+                          </Button>
+                        </div>
+                      </div>
                     </div>
                   </section>
                 )}

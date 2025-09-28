@@ -19,6 +19,7 @@ import DossierRetraite from "./pages/DossierRetraite";
 import Simulateurs from "./pages/Simulateurs";
 import SimulateurAssuranceVie from "./pages/SimulateurAssuranceVie";
 import SimulateurProfilInvestisseur from "./pages/SimulateurProfilInvestisseur";
+import SimulateurCredit from "./pages/SimulateurCredit";
 import SCI2072 from "./pages/SCI2072";
 import Administration from "./pages/Administration";
 import NotFound from "./pages/NotFound";
@@ -41,6 +42,7 @@ const App = () => (
             <Route path="/simulateurs" element={<Simulateurs />} />
             <Route path="/simulateur-assurance-vie" element={<SimulateurAssuranceVie />} />
             <Route path="/simulateur-profil-investisseur" element={<SimulateurProfilInvestisseur />} />
+            <Route path="/simulateur-credit" element={<SimulateurCredit />} />
             <Route path="/sci-2072" element={<SCI2072 />} />
             <Route path="/administration/*" element={<Administration />} />
             {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
