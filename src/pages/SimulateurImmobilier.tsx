@@ -8,6 +8,8 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
+import { Checkbox } from "@/components/ui/checkbox";
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer, PieChart, Pie, Cell } from 'recharts';
 import { useNavigate } from 'react-router-dom';
 
@@ -34,6 +36,7 @@ const SimulateurImmobilier = () => {
     investmentDate: "01/10/2025",
     completionDate: "",
     duration: 10,
+    durationMonths: 3,
     durationUnit: "ans"
   });
 
@@ -43,7 +46,20 @@ const SimulateurImmobilier = () => {
     incomeSource: "Métropole",
     nonResidentTax: false,
     dependents: 0,
-    evolveDependents: false
+    evolveDependents: false,
+    // Nouveaux champs pour les revenus préexistants
+    preexistingRevenues: {
+      taxablePropertyRevenues: 0,
+      otherTaxableRevenues: 0
+    },
+    // Nouveaux champs pour les déficits antérieurs
+    previousDeficits: [
+      { year: 2015, amount: 0 },
+      { year: 2016, amount: 0 },
+      { year: 2017, amount: 0 },
+      { year: 2018, amount: 0 },
+      { year: 2019, amount: 0 }
+    ]
   });
 
   // État de l'investissement
@@ -193,6 +209,12 @@ const SimulateurImmobilier = () => {
   const handleCancelSettings = () => {
     // Annuler les modifications et fermer le modal
     setShowSettingsModal(false);
+  };
+
+  // Fonction utilitaire pour le format de date
+  const formatDateForDisplay = (dateString: string) => {
+    if (!dateString) return "J / mm / aaaa";
+    return dateString.split('/').join(' / ');
   };
 
   const addWork = () => {
@@ -590,9 +612,13 @@ const SimulateurImmobilier = () => {
                         onChange={(value) => setProject({...project, device: value})}
                         options={[
                           { value: "Foncier ordinaire", label: "Foncier ordinaire" },
-                          { value: "Pinel", label: "Loi Pinel" },
-                          { value: "Malraux", label: "Loi Malraux" },
-                          { value: "Denormandie", label: "Denormandie" }
+                          { value: "Micro foncier", label: "Micro foncier" },
+                          { value: "Pinel", label: "Pinel" },
+                          { value: "Pinel Outre-mer", label: "Pinel Outre-mer" },
+                          { value: "Pinel Plus", label: "Pinel Plus" },
+                          { value: "Malraux", label: "Malraux" },
+                          { value: "Denormandie", label: "Denormandie" },
+                          { value: "Censi-Bouvard", label: "Censi-Bouvard" }
                         ]}
                       />
                     </div>
@@ -605,37 +631,39 @@ const SimulateurImmobilier = () => {
                         onChange={(e) => setProject({...project, investmentDate: e.target.value.split('-').reverse().join('/')})}
                       />
 
-                      <InputField
-                        label="Date d'achèvement"
-                        type="date"
-                        value={project.completionDate}
-                        onChange={(e) => setProject({...project, completionDate: e.target.value})}
-                      />
+                      <div>
+                        <Label className="text-sm font-medium text-gray-700 mb-1">Date d'achèvement</Label>
+                        <div className="text-sm text-gray-500 bg-gray-50 p-3 rounded border">
+                          {formatDateForDisplay(project.completionDate)}
+                        </div>
+                      </div>
                     </div>
 
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                       <div className="flex items-end space-x-2">
-                        <InputField
-                          label="Durée du projet"
-                          type="number"
-                          value={project.duration}
-                          onChange={(e) => setProject({...project, duration: parseInt(e.target.value) || 0})}
-                          className="flex-1"
-                        />
-                        <SelectField
-                          label="Unité"
-                          value={project.durationUnit}
-                          onChange={(value) => setProject({...project, durationUnit: value})}
-                          options={[
-                            { value: "ans", label: "ans" },
-                            { value: "mois", label: "mois" }
-                          ]}
-                          className="flex-1"
-                        />
+                        <div className="flex-1">
+                          <InputField
+                            label="Durée du projet"
+                            type="number"
+                            value={project.duration}
+                            onChange={(e) => setProject({...project, duration: parseInt(e.target.value) || 0})}
+                          />
+                        </div>
+                        <span className="text-gray-600 mb-4">ans</span>
+                        <div className="flex-1">
+                          <InputField
+                            label="et"
+                            type="number"
+                            value={project.durationMonths}
+                            onChange={(e) => setProject({...project, durationMonths: parseInt(e.target.value) || 0})}
+                          />
+                        </div>
+                        <span className="text-gray-600 mb-4">mois</span>
                       </div>
                       <div className="flex items-end">
-                        <div className="text-sm text-gray-600 bg-gray-50 p-3 rounded-lg">
-                          <span className="font-medium">Terme au :</span> 31/12/{new Date().getFullYear() + project.duration}
+                        <div className="text-sm text-gray-600 bg-gray-50 p-3 rounded-lg w-full">
+                          <span className="font-medium">soit un terme au :</span><br />
+                          31/12/{new Date().getFullYear() + project.duration}
                         </div>
                       </div>
                     </div>
@@ -1233,7 +1261,16 @@ const SimulateurImmobilier = () => {
                     </CardTitle>
                   </CardHeader>
                   <CardContent>
-                    <ResultsPanel />
+                    {!showResults && (
+                      <div className="bg-gray-50 rounded-lg p-8 text-center my-8">
+                        <FileText className="mx-auto h-12 w-12 text-gray-300 mb-4" />
+                        <h3 className="text-lg font-medium text-gray-600 mb-2">Pas de résultats à afficher</h3>
+                        <p className="text-gray-500 text-sm">
+                          Remplissez les informations nécessaires et cliquez sur "Calculer" pour voir les résultats de votre simulation.
+                        </p>
+                      </div>
+                    )}
+                    {showResults && <ResultsPanel />}
                   </CardContent>
                 </Card>
               </TabsContent>
@@ -1243,11 +1280,13 @@ const SimulateurImmobilier = () => {
 
         {/* Footer informatif */}
         <div className="mt-8 bg-white rounded-lg shadow-sm border-t-4 border-blue-500 p-6">
-          <div className="flex items-center justify-between">
+          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between space-y-4 sm:space-y-0">
             <div className="flex items-center space-x-4">
               <div className="text-gray-600">
                 <p className="text-sm font-medium">Simulation non contractuelle</p>
-                <p className="text-xs text-gray-500">{new Date().toLocaleDateString('fr-FR')}</p>
+                <p className="text-xs text-gray-500">
+                  Quentin y Hovrat - {new Date().toLocaleDateString('fr-FR')}
+                </p>
               </div>
             </div>
             <div className="flex items-center space-x-3">
@@ -1258,6 +1297,14 @@ const SimulateurImmobilier = () => {
               <Button variant="outline" size="sm">
                 <Printer className="h-4 w-4 mr-2" />
                 Imprimer
+              </Button>
+              <Button variant="outline" size="sm">
+                <Calculator className="h-4 w-4 mr-2" />
+                Calculer
+              </Button>
+              <Button variant="outline" size="sm">
+                <FileText className="h-4 w-4 mr-2" />
+                Former
               </Button>
             </div>
           </div>
