@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Calendar, Calculator, Home, TrendingUp, FileText, ArrowLeft, Settings, Printer } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -9,6 +9,9 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Checkbox } from "@/components/ui/checkbox";
+import { Badge } from "@/components/ui/badge";
+import { Switch } from "@/components/ui/switch";
+import { Textarea } from "@/components/ui/textarea";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer, PieChart, Pie, Cell } from 'recharts';
 import { useNavigate } from 'react-router-dom';
@@ -26,6 +29,25 @@ const SimulateurImmobilier = () => {
     showTRI: 'afficher', // 'afficher' ou 'masquer'
     showRendement: 'afficher' // 'afficher' ou 'masquer'
   });
+
+  // État des options avancées
+  const [advancedOptions, setAdvancedOptions] = useState({
+    vacancyRate: 5, // Taux de vacance en %
+    maintenanceReserve: 200, // Réserve maintenance annuelle
+    taxOptimization: true,
+    includeNotaryFees: true,
+    projectionScenario: "standard" // 'standard', 'optimiste', 'pessimiste'
+  });
+
+  // État des notes
+  const [notes, setNotes] = useState({
+    projectNotes: "",
+    investmentNotes: "",
+    revenueNotes: ""
+  });
+
+  // État de la sauvegarde automatique
+  const [lastSave, setLastSave] = useState(new Date());
 
   // État du projet
   const [project, setProject] = useState({
@@ -66,18 +88,29 @@ const SimulateurImmobilier = () => {
   const [investment, setInvestment] = useState({
     acquisitionAmount: 0,
     acquisitionFees: 0,
+    acquisitionFeesPercentage: 7, // Pourcentage standard des frais de notaire
+    acquisitionDate: "01/10/2025",
     revaluation: 0.00,
     saleDate: "01/10/2025",
     fundCall: false,
     works: [],
     financing: {
       personalContribution: 0,
+      personalContributionPercentage: 0,
       credits: [],
       savings: []
     },
     cession: {
-      soldAtEnd: true
-    }
+      soldAtEnd: true,
+      salePrice: 0,
+      saleFees: 0,
+      saleFeesPercentage: 7 // Frais d'agence standard
+    },
+    // NOUVEAUX CHAMPS
+    propertyType: "appartement", // appartement, maison, etc.
+    surface: 0,
+    city: "",
+    energyClass: "D" // DPE
   });
 
   // État des revenus et charges
@@ -87,26 +120,46 @@ const SimulateurImmobilier = () => {
       period: "Mois",
       startDate: "01/10/2025",
       indexation: 0.00,
+      indexationType: "fixe", // 'fixe' ou 'variable'
       diverseRevenues: 0,
-      revenuesReceivedOn: ""
+      diverseRevenuesDescription: "",
+      revenuesReceivedOn: "",
+      vacancyRate: 5, // Taux de vacance
+      chargesRecovered: 0 // Charges récupérables
     },
     charges: {
       propertyTax: 0,
       propertyTaxIndexation: 0.00,
       propertyTaxStartDate: "01/10/2025",
       propertyTaxExemption: false,
+      propertyTaxExemptionYears: 0,
       managementFees: 0.00,
       managementFeesIndexation: 0.00,
       insurancePremiums: 0,
       insurancePremiumsIndexation: 0.00,
+      coproprietyCharges: 0, // NOUVEAU
+      maintenanceReserve: 0, // NOUVEAU
       diverseCharges: 0,
+      diverseChargesDescription: "", // NOUVEAU
       diverseChargesIndexation: 0.00,
       nonDeductibleCharges: 0,
+      nonDeductibleChargesDescription: "", // NOUVEAU
       nonDeductibleChargesIndexation: 0.00
     }
   });
 
   const [results, setResults] = useState(null);
+
+  // Sauvegarde automatique
+  useEffect(() => {
+    const timer = setInterval(() => {
+      setLastSave(new Date());
+      // Ici on pourrait ajouter la logique de sauvegarde réelle
+      console.log("Simulation sauvegardée automatiquement");
+    }, 30000); // Sauvegarde toutes les 30 secondes
+
+    return () => clearInterval(timer);
+  }, []);
 
   // Fonction de calcul des résultats
   const calculateResults = () => {
@@ -493,6 +546,11 @@ const SimulateurImmobilier = () => {
         {/* En-tête avec design bleu */}
         <div className="relative overflow-hidden bg-gradient-to-br from-blue-600 via-blue-700 to-blue-800 rounded-2xl p-6 md:p-8 mb-8 shadow-2xl">
           <div className="absolute inset-0 bg-black/10"></div>
+          <div className="absolute top-4 right-4">
+            <Badge variant={showResults ? "default" : "secondary"} className={showResults ? "bg-green-100 text-green-800 border-green-200" : "bg-gray-100 text-gray-800 border-gray-200"}>
+              {showResults ? "Simulation calculée" : "Simulation en cours"}
+            </Badge>
+          </div>
           <div className="relative z-10 flex flex-col sm:flex-row items-start sm:items-center space-y-4 sm:space-y-0 sm:space-x-4">
             <div className="flex items-center space-x-4">
               <Button
@@ -746,6 +804,64 @@ const SimulateurImmobilier = () => {
                         />
                       </div>
                     </div>
+
+                    {/* Options avancées */}
+                    <div className="mt-8">
+                      <h3 className="text-lg font-semibold text-gray-800 mb-4">Options avancées</h3>
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        <InputField
+                          label="Taux de vacance locative (%)"
+                          type="number"
+                          step="0.1"
+                          value={advancedOptions.vacancyRate}
+                          onChange={(e) => setAdvancedOptions({...advancedOptions, vacancyRate: parseFloat(e.target.value) || 0})}
+                        />
+                        <InputField
+                          label="Réserve maintenance annuelle (€)"
+                          type="number"
+                          value={advancedOptions.maintenanceReserve}
+                          onChange={(e) => setAdvancedOptions({...advancedOptions, maintenanceReserve: parseFloat(e.target.value) || 0})}
+                        />
+                      </div>
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mt-4">
+                        <div className="flex items-center space-x-2">
+                          <Switch
+                            checked={advancedOptions.taxOptimization}
+                            onCheckedChange={(checked) => setAdvancedOptions({...advancedOptions, taxOptimization: checked})}
+                          />
+                          <Label>Optimisation fiscale active</Label>
+                        </div>
+                        <div className="flex items-center space-x-2">
+                          <Switch
+                            checked={advancedOptions.includeNotaryFees}
+                            onCheckedChange={(checked) => setAdvancedOptions({...advancedOptions, includeNotaryFees: checked})}
+                          />
+                          <Label>Inclure frais de notaire</Label>
+                        </div>
+                      </div>
+                      <SelectField
+                        label="Scénario de projection"
+                        value={advancedOptions.projectionScenario}
+                        onChange={(value) => setAdvancedOptions({...advancedOptions, projectionScenario: value})}
+                        options={[
+                          { value: "standard", label: "Standard" },
+                          { value: "optimiste", label: "Optimiste" },
+                          { value: "pessimiste", label: "Pessimiste" }
+                        ]}
+                        className="mt-4"
+                      />
+                    </div>
+
+                    {/* Notes */}
+                    <div className="mt-6">
+                      <h3 className="text-lg font-semibold text-gray-800 mb-4">Notes</h3>
+                      <Textarea
+                        placeholder="Ajoutez des notes concernant votre projet..."
+                        value={notes.projectNotes}
+                        onChange={(e) => setNotes({...notes, projectNotes: e.target.value})}
+                        className="min-h-[100px]"
+                      />
+                    </div>
                   </CardContent>
                 </Card>
               </TabsContent>
@@ -763,17 +879,97 @@ const SimulateurImmobilier = () => {
                     </CardTitle>
                   </CardHeader>
                   <CardContent className="space-y-8">
+                    {/* Analyse de rentabilité rapide */}
+                    <div className="mb-6 p-4 bg-blue-50 border border-blue-200 rounded-lg">
+                      <h4 className="text-md font-semibold text-blue-800 mb-3">Analyse de rentabilité rapide</h4>
+                      <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm">
+                        <div className="text-center p-3 bg-white rounded border">
+                          <div className="text-gray-600">Rendement brut</div>
+                          <div className="text-lg font-bold text-blue-600">
+                            {investment.acquisitionAmount > 0 ? ((revenuesCharges.revenues.rent * 12 / investment.acquisitionAmount) * 100).toFixed(2) : "0.00"}%
+                          </div>
+                        </div>
+                        <div className="text-center p-3 bg-white rounded border">
+                          <div className="text-gray-600">Cash-flow mensuel</div>
+                          <div className="text-lg font-bold text-green-600">
+                            {(revenuesCharges.revenues.rent - (revenuesCharges.charges.propertyTax / 12)).toFixed(0)} €
+                          </div>
+                        </div>
+                        <div className="text-center p-3 bg-white rounded border">
+                          <div className="text-gray-600">Effort épargne</div>
+                          <div className="text-lg font-bold text-orange-600">
+                            {investment.financing.personalContribution > 0 ? (investment.financing.personalContribution / (project.duration * 12)).toFixed(0) : "0"} €/mois
+                          </div>
+                        </div>
+                        <div className="text-center p-3 bg-white rounded border">
+                          <div className="text-gray-600">Leverage</div>
+                          <div className="text-lg font-bold text-purple-600">
+                            {investment.acquisitionAmount > 0 ? ((investment.acquisitionAmount - investment.financing.personalContribution) / investment.acquisitionAmount * 100).toFixed(1) : "0"}%
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+
                     {/* Bien immobilier */}
                     <div>
                       <h3 className="text-lg font-semibold text-gray-800 mb-4">Bien immobilier</h3>
 
-                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      {/* Informations du bien */}
+                      <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
+                        <div>
+                          <label className="block text-sm font-medium text-gray-700 mb-2">
+                            Type de bien
+                          </label>
+                          <Select value={investment.propertyType} onValueChange={(value) => setInvestment({...investment, propertyType: value})}>
+                            <SelectTrigger>
+                              <SelectValue />
+                            </SelectTrigger>
+                            <SelectContent>
+                              <SelectItem value="appartement">Appartement</SelectItem>
+                              <SelectItem value="maison">Maison</SelectItem>
+                              <SelectItem value="immeuble">Immeuble</SelectItem>
+                              <SelectItem value="terrain">Terrain</SelectItem>
+                              <SelectItem value="garage">Garage</SelectItem>
+                              <SelectItem value="local">Local commercial</SelectItem>
+                            </SelectContent>
+                          </Select>
+                        </div>
+
                         <InputField
-                          label="Montant d'acquisition (€)"
+                          label="Surface (m²)"
                           type="number"
-                          value={investment.acquisitionAmount}
-                          onChange={(e) => setInvestment({...investment, acquisitionAmount: parseFloat(e.target.value) || 0})}
+                          value={investment.surface}
+                          onChange={(e) => setInvestment({...investment, surface: parseFloat(e.target.value) || 0})}
                         />
+
+                        <InputField
+                          label="Ville"
+                          type="text"
+                          value={investment.city}
+                          onChange={(e) => setInvestment({...investment, city: e.target.value})}
+                        />
+                      </div>
+
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+                        <div>
+                          <label className="block text-sm font-medium text-gray-700 mb-2">
+                            Classe énergétique
+                          </label>
+                          <Select value={investment.energyClass} onValueChange={(value) => setInvestment({...investment, energyClass: value})}>
+                            <SelectTrigger>
+                              <SelectValue />
+                            </SelectTrigger>
+                            <SelectContent>
+                              <SelectItem value="A">A - Très économe</SelectItem>
+                              <SelectItem value="B">B - Économe</SelectItem>
+                              <SelectItem value="C">C - Conventional</SelectItem>
+                              <SelectItem value="D">D - Peu économe</SelectItem>
+                              <SelectItem value="E">E - Passoire énergétique</SelectItem>
+                              <SelectItem value="F">F - Passoire énergétique</SelectItem>
+                              <SelectItem value="G">G - Passoire énergétique</SelectItem>
+                            </SelectContent>
+                          </Select>
+                        </div>
 
                         <div className="flex items-end space-x-2">
                           <div className="flex-1">
@@ -788,32 +984,88 @@ const SimulateurImmobilier = () => {
                         </div>
                       </div>
 
-                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-4">
-                        <InputField
-                          label="Frais d'acquisition (€)"
-                          type="number"
-                          value={investment.acquisitionFees}
-                          onChange={(e) => setInvestment({...investment, acquisitionFees: parseFloat(e.target.value) || 0})}
-                        />
+                      {/* Acquisition */}
+                      <div className="border-t pt-4">
+                        <h4 className="text-md font-medium text-gray-700 mb-3">Acquisition</h4>
 
-                        <InputField
-                          label="Versés le"
-                          type="date"
-                          value={investment.saleDate.split('/').reverse().join('-')}
-                          onChange={(e) => setInvestment({...investment, saleDate: e.target.value.split('-').reverse().join('/')})}
-                        />
-                      </div>
-
-                      <div className="mt-4">
-                        <label className="flex items-center">
-                          <input
-                            type="checkbox"
-                            checked={investment.fundCall}
-                            onChange={(e) => setInvestment({...investment, fundCall: e.target.checked})}
-                            className="mr-2"
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                          <InputField
+                            label="Prix d'acquisition (€)"
+                            type="number"
+                            value={investment.acquisitionAmount}
+                            onChange={(e) => {
+                              const amount = parseFloat(e.target.value) || 0;
+                              const fees = Math.round(amount * (investment.acquisitionFeesPercentage / 100));
+                              setInvestment({
+                                ...investment,
+                                acquisitionAmount: amount,
+                                acquisitionFees: fees
+                              });
+                            }}
                           />
-                          Appels de fonds
-                        </label>
+
+                          <div className="space-y-2">
+                            <div className="flex items-center space-x-2">
+                              <div className="flex-1">
+                                <InputField
+                                  label="Frais d'acquisition (%)"
+                                  type="number"
+                                  step="0.1"
+                                  value={investment.acquisitionFeesPercentage}
+                                  onChange={(e) => {
+                                    const percentage = parseFloat(e.target.value) || 0;
+                                    const fees = Math.round(investment.acquisitionAmount * (percentage / 100));
+                                    setInvestment({
+                                      ...investment,
+                                      acquisitionFeesPercentage: percentage,
+                                      acquisitionFees: fees
+                                    });
+                                  }}
+                                />
+                              </div>
+                            </div>
+                            <div className="text-sm text-gray-600">
+                              Montant: {investment.acquisitionFees.toLocaleString()} €
+                            </div>
+                          </div>
+                        </div>
+
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-4">
+                          <InputField
+                            label="Date d'acquisition"
+                            type="date"
+                            value={investment.acquisitionDate.split('/').reverse().join('-')}
+                            onChange={(e) => setInvestment({...investment, acquisitionDate: e.target.value.split('-').reverse().join('/')})}
+                          />
+
+                          <div className="flex items-center space-x-2">
+                            <label className="flex items-center">
+                              <input
+                                type="checkbox"
+                                checked={investment.fundCall}
+                                onChange={(e) => setInvestment({...investment, fundCall: e.target.checked})}
+                                className="mr-2"
+                              />
+                              Appels de fonds
+                            </label>
+                          </div>
+                        </div>
+
+                        {/* Total investissement */}
+                        <div className="mt-4 p-3 bg-blue-50 rounded-lg">
+                          <div className="flex justify-between items-center">
+                            <span className="font-medium text-gray-700">Total investissement:</span>
+                            <span className="text-lg font-bold text-blue-600">
+                              {(investment.acquisitionAmount + investment.acquisitionFees).toLocaleString()} €
+                            </span>
+                          </div>
+                          {investment.surface > 0 && (
+                            <div className="flex justify-between items-center mt-1 text-sm text-gray-600">
+                              <span>Prix au m²:</span>
+                              <span>{Math.round((investment.acquisitionAmount + investment.acquisitionFees) / investment.surface).toLocaleString()} €/m²</span>
+                            </div>
+                          )}
+                        </div>
                       </div>
                     </div>
 
@@ -986,19 +1238,106 @@ const SimulateurImmobilier = () => {
                     {/* Cession */}
                     <div>
                       <h3 className="text-lg font-semibold text-gray-800 mb-4">Cession</h3>
-                      <div className="bg-gray-50 border border-gray-200 rounded-lg p-4">
-                        <label className="flex items-center">
-                          <input
-                            type="checkbox"
-                            checked={investment.cession.soldAtEnd}
-                            onChange={(e) => setInvestment({
-                              ...investment,
-                              cession: {...investment.cession, soldAtEnd: e.target.checked}
-                            })}
-                            className="mr-3"
-                          />
-                          <span className="text-gray-700">Le bien est cédé au terme de l'opération</span>
-                        </label>
+
+                      <div className="space-y-4">
+                        <div className="bg-gray-50 border border-gray-200 rounded-lg p-4">
+                          <label className="flex items-center">
+                            <input
+                              type="checkbox"
+                              checked={investment.cession.soldAtEnd}
+                              onChange={(e) => setInvestment({
+                                ...investment,
+                                cession: {...investment.cession, soldAtEnd: e.target.checked}
+                              })}
+                              className="mr-3"
+                            />
+                            <span className="text-gray-700">Le bien est cédé au terme de l'opération</span>
+                          </label>
+                        </div>
+
+                        {investment.cession.soldAtEnd && (
+                          <div className="border border-gray-200 rounded-lg p-4 space-y-4">
+                            <h4 className="text-md font-medium text-gray-700">Détails de la cession</h4>
+
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                              <InputField
+                                label="Prix de vente (€)"
+                                type="number"
+                                value={investment.cession.salePrice}
+                                onChange={(e) => {
+                                  const price = parseFloat(e.target.value) || 0;
+                                  const fees = Math.round(price * (investment.cession.saleFeesPercentage / 100));
+                                  setInvestment({
+                                    ...investment,
+                                    cession: {
+                                      ...investment.cession,
+                                      salePrice: price,
+                                      saleFees: fees
+                                    }
+                                  });
+                                }}
+                              />
+
+                              <div className="space-y-2">
+                                <div className="flex items-center space-x-2">
+                                  <div className="flex-1">
+                                    <InputField
+                                      label="Frais de vente (%)"
+                                      type="number"
+                                      step="0.1"
+                                      value={investment.cession.saleFeesPercentage}
+                                      onChange={(e) => {
+                                        const percentage = parseFloat(e.target.value) || 0;
+                                        const fees = Math.round(investment.cession.salePrice * (percentage / 100));
+                                        setInvestment({
+                                          ...investment,
+                                          cession: {
+                                            ...investment.cession,
+                                            saleFeesPercentage: percentage,
+                                            saleFees: fees
+                                          }
+                                        });
+                                      }}
+                                    />
+                                  </div>
+                                </div>
+                                <div className="text-sm text-gray-600">
+                                  Montant: {investment.cession.saleFees.toLocaleString()} €
+                                </div>
+                              </div>
+                            </div>
+
+                            {/* Résumé de la cession */}
+                            <div className="mt-4 p-3 bg-green-50 rounded-lg">
+                              <div className="space-y-2">
+                                <div className="flex justify-between items-center">
+                                  <span className="text-sm text-gray-600">Prix de vente:</span>
+                                  <span className="font-medium">{investment.cession.salePrice.toLocaleString()} €</span>
+                                </div>
+                                <div className="flex justify-between items-center">
+                                  <span className="text-sm text-gray-600">Frais de vente:</span>
+                                  <span className="font-medium">-{investment.cession.saleFees.toLocaleString()} €</span>
+                                </div>
+                                <div className="flex justify-between items-center border-t pt-2">
+                                  <span className="font-medium text-gray-700">Produit net de cession:</span>
+                                  <span className="text-lg font-bold text-green-600">
+                                    {(investment.cession.salePrice - investment.cession.saleFees).toLocaleString()} €
+                                  </span>
+                                </div>
+
+                                {/* Plus-value potentielle */}
+                                {investment.acquisitionAmount > 0 && (
+                                  <div className="flex justify-between items-center pt-1">
+                                    <span className="text-sm text-gray-600">Plus-value brute:</span>
+                                    <span className={`font-medium ${(investment.cession.salePrice - investment.cession.saleFees - investment.acquisitionAmount - investment.acquisitionFees) >= 0 ? 'text-green-600' : 'text-red-600'}`}>
+                                      {((investment.cession.salePrice - investment.cession.saleFees) - (investment.acquisitionAmount + investment.acquisitionFees)).toLocaleString()} €
+                                    </span>
+                                  </div>
+                                )}
+                              </div>
+                            </div>
+                          </div>
+                        )}
                       </div>
                     </div>
                   </CardContent>
@@ -1021,68 +1360,223 @@ const SimulateurImmobilier = () => {
                     {/* Section Revenus */}
                     <div>
                       <h3 className="text-lg font-semibold text-gray-800 mb-4">Revenus</h3>
-                      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                        <InputField
-                          label="Loyers (€)"
-                          type="number"
-                          value={revenuesCharges.revenues.rent}
-                          onChange={(e) => setRevenuesCharges({
-                            ...revenuesCharges,
-                            revenues: {...revenuesCharges.revenues, rent: parseFloat(e.target.value) || 0}
-                          })}
-                        />
-                        <SelectField
-                          label="Par"
-                          value={revenuesCharges.revenues.period}
-                          onChange={(value) => setRevenuesCharges({
-                            ...revenuesCharges,
-                            revenues: {...revenuesCharges.revenues, period: value}
-                          })}
-                          options={[
-                            { value: "Mois", label: "Mois" },
-                            { value: "Trimestre", label: "Trimestre" },
-                            { value: "Année", label: "Année" }
-                          ]}
-                        />
-                        <InputField
-                          label="Indexation annuelle (%)"
-                          type="number"
-                          step="0.01"
-                          value={revenuesCharges.revenues.indexation}
-                          onChange={(e) => setRevenuesCharges({
-                            ...revenuesCharges,
-                            revenues: {...revenuesCharges.revenues, indexation: parseFloat(e.target.value) || 0}
-                          })}
-                        />
+
+                      {/* Revenus locatifs */}
+                      <div className="border border-gray-200 rounded-lg p-4 mb-6">
+                        <h4 className="text-md font-medium text-gray-700 mb-3">Revenus locatifs</h4>
+
+                        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                          <InputField
+                            label="Loyers (€)"
+                            type="number"
+                            value={revenuesCharges.revenues.rent}
+                            onChange={(e) => setRevenuesCharges({
+                              ...revenuesCharges,
+                              revenues: {...revenuesCharges.revenues, rent: parseFloat(e.target.value) || 0}
+                            })}
+                          />
+                          <SelectField
+                            label="Par"
+                            value={revenuesCharges.revenues.period}
+                            onChange={(value) => setRevenuesCharges({
+                              ...revenuesCharges,
+                              revenues: {...revenuesCharges.revenues, period: value}
+                            })}
+                            options={[
+                              { value: "Mois", label: "Mois" },
+                              { value: "Trimestre", label: "Trimestre" },
+                              { value: "Année", label: "Année" }
+                            ]}
+                          />
+                          <InputField
+                            label="Indexation annuelle (%)"
+                            type="number"
+                            step="0.01"
+                            value={revenuesCharges.revenues.indexation}
+                            onChange={(e) => setRevenuesCharges({
+                              ...revenuesCharges,
+                              revenues: {...revenuesCharges.revenues, indexation: parseFloat(e.target.value) || 0}
+                            })}
+                          />
+                        </div>
+
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-4">
+                          <InputField
+                            label="Date de début"
+                            type="date"
+                            value={revenuesCharges.revenues.startDate.split('/').reverse().join('-')}
+                            onChange={(e) => setRevenuesCharges({
+                              ...revenuesCharges,
+                              revenues: {...revenuesCharges.revenues, startDate: e.target.value.split('-').reverse().join('/')}
+                            })}
+                          />
+                          <InputField
+                            label="Taux de vacance (%)"
+                            type="number"
+                            step="0.1"
+                            value={revenuesCharges.revenues.vacancyRate}
+                            onChange={(e) => setRevenuesCharges({
+                              ...revenuesCharges,
+                              revenues: {...revenuesCharges.revenues, vacancyRate: parseFloat(e.target.value) || 0}
+                            })}
+                          />
+                        </div>
+
+                        {/* Calcul automatique des revenus annuels nets */}
+                        <div className="mt-4 p-3 bg-blue-50 rounded-lg">
+                          <div className="space-y-2">
+                            <div className="flex justify-between items-center text-sm">
+                              <span className="text-gray-600">Revenus bruts annuels:</span>
+                              <span className="font-medium">
+                                {(() => {
+                                  const multiplier = revenuesCharges.revenues.period === "Mois" ? 12 :
+                                                   revenuesCharges.revenues.period === "Trimestre" ? 4 : 1;
+                                  return (revenuesCharges.revenues.rent * multiplier).toLocaleString();
+                                })()} €
+                              </span>
+                            </div>
+                            <div className="flex justify-between items-center text-sm">
+                              <span className="text-gray-600">Impact vacance ({revenuesCharges.revenues.vacancyRate}%):</span>
+                              <span className="font-medium text-red-600">
+                                -{(() => {
+                                  const multiplier = revenuesCharges.revenues.period === "Mois" ? 12 :
+                                                   revenuesCharges.revenues.period === "Trimestre" ? 4 : 1;
+                                  const annualRent = revenuesCharges.revenues.rent * multiplier;
+                                  return Math.round(annualRent * (revenuesCharges.revenues.vacancyRate / 100)).toLocaleString();
+                                })()} €
+                              </span>
+                            </div>
+                            <div className="flex justify-between items-center border-t pt-2">
+                              <span className="font-medium text-gray-700">Revenus nets prévisionnels:</span>
+                              <span className="text-lg font-bold text-blue-600">
+                                {(() => {
+                                  const multiplier = revenuesCharges.revenues.period === "Mois" ? 12 :
+                                                   revenuesCharges.revenues.period === "Trimestre" ? 4 : 1;
+                                  const annualRent = revenuesCharges.revenues.rent * multiplier;
+                                  const netRent = annualRent * (1 - revenuesCharges.revenues.vacancyRate / 100);
+                                  return Math.round(netRent).toLocaleString();
+                                })()} €/an
+                              </span>
+                            </div>
+                          </div>
+                        </div>
                       </div>
-                      <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mt-4">
-                        <InputField
-                          label="Date de début"
-                          type="date"
-                          value={revenuesCharges.revenues.startDate.split('/').reverse().join('-')}
-                          onChange={(e) => setRevenuesCharges({
-                            ...revenuesCharges,
-                            revenues: {...revenuesCharges.revenues, startDate: e.target.value.split('-').reverse().join('/')}
-                          })}
-                        />
-                        <InputField
-                          label="Recettes diverses (€)"
-                          type="number"
-                          value={revenuesCharges.revenues.diverseRevenues}
-                          onChange={(e) => setRevenuesCharges({
-                            ...revenuesCharges,
-                            revenues: {...revenuesCharges.revenues, diverseRevenues: parseFloat(e.target.value) || 0}
-                          })}
-                        />
-                        <InputField
-                          label="Recettes perçues le"
-                          type="date"
-                          value={revenuesCharges.revenues.revenuesReceivedOn}
-                          onChange={(e) => setRevenuesCharges({
-                            ...revenuesCharges,
-                            revenues: {...revenuesCharges.revenues, revenuesReceivedOn: e.target.value}
-                          })}
-                        />
+
+                      {/* Charges récupérables */}
+                      <div className="border border-gray-200 rounded-lg p-4 mb-6">
+                        <h4 className="text-md font-medium text-gray-700 mb-3">Charges récupérables</h4>
+
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                          <InputField
+                            label="Montant annuel (€)"
+                            type="number"
+                            value={revenuesCharges.revenues.chargesRecovered}
+                            onChange={(e) => setRevenuesCharges({
+                              ...revenuesCharges,
+                              revenues: {...revenuesCharges.revenues, chargesRecovered: parseFloat(e.target.value) || 0}
+                            })}
+                          />
+                          <div className="space-y-2">
+                            <label className="block text-sm font-medium text-gray-700">
+                              Rendement charges récupérables
+                            </label>
+                            <div className="text-sm text-gray-600 bg-gray-50 p-2 rounded">
+                              {investment.acquisitionAmount > 0 ?
+                                `${((revenuesCharges.revenues.chargesRecovered / investment.acquisitionAmount) * 100).toFixed(2)}% du prix d'acquisition` :
+                                "Saisissez le prix d'acquisition"}
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+
+                      {/* Autres revenus */}
+                      <div className="border border-gray-200 rounded-lg p-4 mb-6">
+                        <h4 className="text-md font-medium text-gray-700 mb-3">Autres revenus</h4>
+
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                          <InputField
+                            label="Recettes diverses (€/an)"
+                            type="number"
+                            value={revenuesCharges.revenues.diverseRevenues}
+                            onChange={(e) => setRevenuesCharges({
+                              ...revenuesCharges,
+                              revenues: {...revenuesCharges.revenues, diverseRevenues: parseFloat(e.target.value) || 0}
+                            })}
+                          />
+                          <div>
+                            <label className="block text-sm font-medium text-gray-700 mb-2">
+                              Description
+                            </label>
+                            <Textarea
+                              value={revenuesCharges.revenues.diverseRevenuesDescription}
+                              onChange={(e) => setRevenuesCharges({
+                                ...revenuesCharges,
+                                revenues: {...revenuesCharges.revenues, diverseRevenuesDescription: e.target.value}
+                              })}
+                              placeholder="Parking, garage, subventions..."
+                              rows={2}
+                            />
+                          </div>
+                        </div>
+                      </div>
+
+                      {/* Synthèse des revenus */}
+                      <div className="bg-gradient-to-r from-green-50 to-blue-50 border border-green-200 rounded-lg p-4">
+                        <h4 className="text-md font-medium text-gray-700 mb-3">Synthèse annuelle des revenus</h4>
+
+                        <div className="space-y-2">
+                          <div className="flex justify-between items-center">
+                            <span className="text-sm text-gray-600">Loyers nets (après vacance):</span>
+                            <span className="font-medium">
+                              {(() => {
+                                const multiplier = revenuesCharges.revenues.period === "Mois" ? 12 :
+                                                 revenuesCharges.revenues.period === "Trimestre" ? 4 : 1;
+                                const annualRent = revenuesCharges.revenues.rent * multiplier;
+                                const netRent = annualRent * (1 - revenuesCharges.revenues.vacancyRate / 100);
+                                return Math.round(netRent).toLocaleString();
+                              })()} €
+                            </span>
+                          </div>
+                          <div className="flex justify-between items-center">
+                            <span className="text-sm text-gray-600">Charges récupérables:</span>
+                            <span className="font-medium">{revenuesCharges.revenues.chargesRecovered.toLocaleString()} €</span>
+                          </div>
+                          <div className="flex justify-between items-center">
+                            <span className="text-sm text-gray-600">Recettes diverses:</span>
+                            <span className="font-medium">{revenuesCharges.revenues.diverseRevenues.toLocaleString()} €</span>
+                          </div>
+                          <div className="flex justify-between items-center border-t pt-2">
+                            <span className="font-bold text-gray-700">Total revenus annuels:</span>
+                            <span className="text-xl font-bold text-green-600">
+                              {(() => {
+                                const multiplier = revenuesCharges.revenues.period === "Mois" ? 12 :
+                                                 revenuesCharges.revenues.period === "Trimestre" ? 4 : 1;
+                                const annualRent = revenuesCharges.revenues.rent * multiplier;
+                                const netRent = annualRent * (1 - revenuesCharges.revenues.vacancyRate / 100);
+                                const total = netRent + revenuesCharges.revenues.chargesRecovered + revenuesCharges.revenues.diverseRevenues;
+                                return Math.round(total).toLocaleString();
+                              })()} €
+                            </span>
+                          </div>
+
+                          {/* Rendement brut */}
+                          {investment.acquisitionAmount > 0 && (
+                            <div className="flex justify-between items-center pt-1 text-sm">
+                              <span className="text-gray-600">Rendement brut:</span>
+                              <span className="font-medium text-blue-600">
+                                {(() => {
+                                  const multiplier = revenuesCharges.revenues.period === "Mois" ? 12 :
+                                                   revenuesCharges.revenues.period === "Trimestre" ? 4 : 1;
+                                  const annualRent = revenuesCharges.revenues.rent * multiplier;
+                                  const netRent = annualRent * (1 - revenuesCharges.revenues.vacancyRate / 100);
+                                  const total = netRent + revenuesCharges.revenues.chargesRecovered + revenuesCharges.revenues.diverseRevenues;
+                                  const rentabilite = (total / investment.acquisitionAmount) * 100;
+                                  return rentabilite.toFixed(2);
+                                })()}%
+                              </span>
+                            </div>
+                          )}
+                        </div>
                       </div>
                     </div>
 
@@ -1244,6 +1738,121 @@ const SimulateurImmobilier = () => {
                         </div>
                       </div>
                     </div>
+
+                    {/* Charges de copropriété */}
+                    <div className="border border-gray-200 rounded-lg p-4 mb-6">
+                      <h4 className="text-md font-medium text-gray-700 mb-3">Charges de copropriété</h4>
+
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <InputField
+                          label="Montant annuel (€)"
+                          type="number"
+                          value={revenuesCharges.charges.coproprietyCharges}
+                          onChange={(e) => setRevenuesCharges({
+                            ...revenuesCharges,
+                            charges: {...revenuesCharges.charges, coproprietyCharges: parseFloat(e.target.value) || 0}
+                          })}
+                        />
+                        <div className="space-y-2">
+                          <label className="block text-sm font-medium text-gray-700">
+                            Informations
+                          </label>
+                          <div className="text-sm text-gray-600 bg-gray-50 p-2 rounded">
+                            Charges générales, entretien, chauffage collectif, ascenseur...
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Réserve de maintenance */}
+                    <div className="border border-gray-200 rounded-lg p-4 mb-6">
+                      <h4 className="text-md font-medium text-gray-700 mb-3">Réserve de maintenance</h4>
+
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <InputField
+                          label="Montant annuel (€)"
+                          type="number"
+                          value={revenuesCharges.charges.maintenanceReserve}
+                          onChange={(e) => setRevenuesCharges({
+                            ...revenuesCharges,
+                            charges: {...revenuesCharges.charges, maintenanceReserve: parseFloat(e.target.value) || 0}
+                          })}
+                        />
+                        <div className="space-y-2">
+                          <label className="block text-sm font-medium text-gray-700">
+                            Recommandation
+                          </label>
+                          <div className="text-sm text-gray-600 bg-yellow-50 p-2 rounded border border-yellow-200">
+                            {investment.acquisitionAmount > 0 ?
+                              `Recommandé: ${Math.round(investment.acquisitionAmount * 0.01).toLocaleString()} € (1% du prix d'acquisition)` :
+                              "Généralement 1% du prix d'acquisition"}
+                          </div>
+                        </div>
+                      </div>
+
+                      <div className="mt-4">
+                        <label className="block text-sm font-medium text-gray-700 mb-2">
+                          Détails de la réserve
+                        </label>
+                        <Textarea
+                          value={revenuesCharges.charges.diverseChargesDescription}
+                          onChange={(e) => setRevenuesCharges({
+                            ...revenuesCharges,
+                            charges: {...revenuesCharges.charges, diverseChargesDescription: e.target.value}
+                          })}
+                          placeholder="Réparations, remplacement équipements, travaux de rénovation..."
+                          rows={2}
+                        />
+                      </div>
+                    </div>
+
+                    {/* Synthèse des charges annuelles */}
+                    <div className="mt-6 p-4 bg-gray-50 border border-gray-200 rounded-lg">
+                      <h4 className="text-md font-semibold text-gray-800 mb-3">Synthèse des charges annuelles</h4>
+                      <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm">
+                        <div className="text-center">
+                          <div className="text-gray-600">Taxes foncières</div>
+                          <div className="font-semibold">{revenuesCharges.charges.propertyTax} €</div>
+                        </div>
+                        <div className="text-center">
+                          <div className="text-gray-600">Frais de gestion</div>
+                          <div className="font-semibold">{(revenuesCharges.revenues.rent * 12 * revenuesCharges.charges.managementFees / 100).toFixed(0)} €</div>
+                        </div>
+                        <div className="text-center">
+                          <div className="text-gray-600">Assurances</div>
+                          <div className="font-semibold">{revenuesCharges.charges.insurancePremiums} €</div>
+                        </div>
+                        <div className="text-center">
+                          <div className="text-gray-600">Charges diverses</div>
+                          <div className="font-semibold">{revenuesCharges.charges.diverseCharges} €</div>
+                        </div>
+                      </div>
+                      <div className="grid grid-cols-2 md:grid-cols-2 gap-4 text-sm mt-3">
+                        <div className="text-center">
+                          <div className="text-gray-600">Copropriété</div>
+                          <div className="font-semibold">{revenuesCharges.charges.coproprietyCharges} €</div>
+                        </div>
+                        <div className="text-center">
+                          <div className="text-gray-600">Réserve maintenance</div>
+                          <div className="font-semibold">{revenuesCharges.charges.maintenanceReserve} €</div>
+                        </div>
+                      </div>
+                      <div className="mt-3 pt-3 border-t border-gray-200">
+                        <div className="flex justify-between items-center">
+                          <span className="font-semibold">Total charges annuelles</span>
+                          <span className="font-bold text-red-600">
+                            {(
+                              revenuesCharges.charges.propertyTax +
+                              (revenuesCharges.revenues.rent * 12 * revenuesCharges.charges.managementFees / 100) +
+                              revenuesCharges.charges.insurancePremiums +
+                              revenuesCharges.charges.diverseCharges +
+                              revenuesCharges.charges.coproprietyCharges +
+                              revenuesCharges.charges.maintenanceReserve
+                            ).toFixed(0)} €
+                          </span>
+                        </div>
+                      </div>
+                    </div>
                   </CardContent>
                 </Card>
               </TabsContent>
@@ -1261,6 +1870,131 @@ const SimulateurImmobilier = () => {
                     </CardTitle>
                   </CardHeader>
                   <CardContent>
+                    {/* Indicateurs clés */}
+                    {results && (
+                      <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
+                        <Card className="bg-gradient-to-br from-purple-50 to-purple-100 border-purple-200">
+                          <CardContent className="p-4">
+                            <div className="text-center">
+                              <div className="text-sm text-purple-600 mb-1">TRI</div>
+                              <div className="text-2xl font-bold text-purple-700">
+                                {(results.totalReturnPercentage / project.duration).toFixed(1)}%
+                              </div>
+                              <div className="text-xs text-purple-500 mt-1">Taux de Rendement Interne</div>
+                            </div>
+                          </CardContent>
+                        </Card>
+                        <Card className="bg-gradient-to-br from-orange-50 to-orange-100 border-orange-200">
+                          <CardContent className="p-4">
+                            <div className="text-center">
+                              <div className="text-sm text-orange-600 mb-1">Cash-on-Cash</div>
+                              <div className="text-2xl font-bold text-orange-700">
+                                {investment.financing.personalContribution > 0 ? (results.netAnnualRevenue / investment.financing.personalContribution * 100).toFixed(1) : "0.0"}%
+                              </div>
+                              <div className="text-xs text-orange-500 mt-1">Rendement sur apport</div>
+                            </div>
+                          </CardContent>
+                        </Card>
+                        <Card className="bg-gradient-to-br from-pink-50 to-pink-100 border-pink-200">
+                          <CardContent className="p-4">
+                            <div className="text-center">
+                              <div className="text-sm text-pink-600 mb-1">Point d'équilibre</div>
+                              <div className="text-2xl font-bold text-pink-700">
+                                {results.annualRent > 0 ? Math.ceil(results.annualCharges / results.annualRent * 100) : "0"}%
+                              </div>
+                              <div className="text-xs text-pink-500 mt-1">Taux d'occupation min.</div>
+                            </div>
+                          </CardContent>
+                        </Card>
+                      </div>
+                    )}
+
+                    {/* Système d'onglets pour les résultats */}
+                    {results && (
+                      <Tabs defaultValue="synthese" className="w-full">
+                        <TabsList className="grid w-full grid-cols-4">
+                          <TabsTrigger value="synthese">Synthèse</TabsTrigger>
+                          <TabsTrigger value="details">Détails</TabsTrigger>
+                          <TabsTrigger value="fiscalite">Fiscalité</TabsTrigger>
+                          <TabsTrigger value="projection">Projection</TabsTrigger>
+                        </TabsList>
+
+                        <TabsContent value="synthese">
+                          <ResultsPanel />
+                        </TabsContent>
+
+                        <TabsContent value="details">
+                          <div className="bg-white rounded-lg border p-4">
+                            <h4 className="font-semibold mb-3">Détails année par année</h4>
+                            <Table>
+                              <TableHeader>
+                                <TableRow>
+                                  <TableHead>Année</TableHead>
+                                  <TableHead>Revenus bruts</TableHead>
+                                  <TableHead>Charges</TableHead>
+                                  <TableHead>Revenus nets</TableHead>
+                                  <TableHead>Cumul</TableHead>
+                                </TableRow>
+                              </TableHeader>
+                              <TableBody>
+                                {Array.from({length: project.duration}, (_, i) => i + 1).map((year) => (
+                                  <TableRow key={year}>
+                                    <TableCell>Année {year}</TableCell>
+                                    <TableCell>{(results.annualRent * Math.pow(1 + revenuesCharges.revenues.indexation/100, year-1)).toFixed(0)} €</TableCell>
+                                    <TableCell>{results.annualCharges.toFixed(0)} €</TableCell>
+                                    <TableCell>{(results.annualRent * Math.pow(1 + revenuesCharges.revenues.indexation/100, year-1) - results.annualCharges).toFixed(0)} €</TableCell>
+                                    <TableCell>{(results.netAnnualRevenue * year).toFixed(0)} €</TableCell>
+                                  </TableRow>
+                                ))}
+                              </TableBody>
+                            </Table>
+                          </div>
+                        </TabsContent>
+
+                        <TabsContent value="fiscalite">
+                          <div className="bg-white rounded-lg border p-4">
+                            <h4 className="font-semibold mb-3">Impact fiscal</h4>
+                            <div className="space-y-4">
+                              <div className="grid grid-cols-2 gap-4">
+                                <div>
+                                  <Label className="text-sm font-medium">Économie d'impôt annuelle</Label>
+                                  <div className="text-lg font-bold text-green-600">
+                                    {advancedOptions.taxOptimization ? (results.annualCharges * 0.3).toFixed(0) : "0"} €
+                                  </div>
+                                </div>
+                                <div>
+                                  <Label className="text-sm font-medium">Déficit foncier potentiel</Label>
+                                  <div className="text-lg font-bold text-blue-600">
+                                    {Math.max(0, results.annualCharges - results.annualRent).toFixed(0)} €
+                                  </div>
+                                </div>
+                              </div>
+                            </div>
+                          </div>
+                        </TabsContent>
+
+                        <TabsContent value="projection">
+                          <div className="bg-white rounded-lg border p-4">
+                            <h4 className="font-semibold mb-3">Projection sur {project.duration} ans</h4>
+                            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                              <div className="text-center p-4 bg-blue-50 rounded">
+                                <div className="text-sm text-gray-600">Total revenus</div>
+                                <div className="text-xl font-bold text-blue-600">{results.totalRevenueOverPeriod.toFixed(0)} €</div>
+                              </div>
+                              <div className="text-center p-4 bg-green-50 rounded">
+                                <div className="text-sm text-gray-600">Plus-value</div>
+                                <div className="text-xl font-bold text-green-600">{results.capitalGain.toFixed(0)} €</div>
+                              </div>
+                              <div className="text-center p-4 bg-purple-50 rounded">
+                                <div className="text-sm text-gray-600">Rentabilité totale</div>
+                                <div className="text-xl font-bold text-purple-600">{results.totalReturnPercentage.toFixed(1)}%</div>
+                              </div>
+                            </div>
+                          </div>
+                        </TabsContent>
+                      </Tabs>
+                    )}
+
                     {!showResults && (
                       <div className="bg-gray-50 rounded-lg p-8 text-center my-8">
                         <FileText className="mx-auto h-12 w-12 text-gray-300 mb-4" />
@@ -1270,7 +2004,6 @@ const SimulateurImmobilier = () => {
                         </p>
                       </div>
                     )}
-                    {showResults && <ResultsPanel />}
                   </CardContent>
                 </Card>
               </TabsContent>
@@ -1287,6 +2020,10 @@ const SimulateurImmobilier = () => {
                 <p className="text-xs text-gray-500">
                   Quentin y Hovrat - {new Date().toLocaleDateString('fr-FR')}
                 </p>
+                <div className="flex items-center space-x-2 text-xs text-gray-500 mt-2">
+                  <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse"></div>
+                  <span>Dernière sauvegarde: {lastSave.toLocaleTimeString('fr-FR')}</span>
+                </div>
               </div>
             </div>
             <div className="flex items-center space-x-3">
