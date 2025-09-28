@@ -762,16 +762,79 @@ const SimulateurImmobilier = () => {
                       {/* Revenus préexistants */}
                       <div className="mb-6">
                         <h4 className="text-md font-medium text-gray-700 mb-3">Revenus préexistants</h4>
-                        <div className="bg-gray-50 p-4 rounded-lg">
-                          <p className="text-sm text-gray-600">Section à compléter pour les revenus existants</p>
+                        <div className="bg-gray-50 p-4 rounded-lg space-y-4">
+                          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            <InputField
+                              label="Revenus fonciers imposables (€)"
+                              type="number"
+                              value={taxSituation.preexistingRevenues.taxablePropertyRevenues}
+                              onChange={(e) => setTaxSituation({
+                                ...taxSituation,
+                                preexistingRevenues: {
+                                  ...taxSituation.preexistingRevenues,
+                                  taxablePropertyRevenues: parseFloat(e.target.value) || 0
+                                }
+                              })}
+                              placeholder="Revenus fonciers actuels"
+                            />
+                            <InputField
+                              label="Autres revenus imposables (€)"
+                              type="number"
+                              value={taxSituation.preexistingRevenues.otherTaxableRevenues}
+                              onChange={(e) => setTaxSituation({
+                                ...taxSituation,
+                                preexistingRevenues: {
+                                  ...taxSituation.preexistingRevenues,
+                                  otherTaxableRevenues: parseFloat(e.target.value) || 0
+                                }
+                              })}
+                              placeholder="Salaires, pensions, etc."
+                            />
+                          </div>
+                          <div className="text-sm text-gray-600">
+                            <p>Ces revenus sont utilisés pour calculer votre tranche marginale d'imposition et l'impact fiscal de votre investissement.</p>
+                          </div>
                         </div>
                       </div>
 
                       {/* Déficits fonciers antérieurs */}
                       <div className="mb-6">
                         <h4 className="text-md font-medium text-gray-700 mb-3">Déficits fonciers antérieurs</h4>
-                        <div className="bg-gray-50 p-4 rounded-lg">
-                          <p className="text-sm text-gray-600">Section à compléter pour les déficits antérieurs</p>
+                        <div className="bg-gray-50 p-4 rounded-lg space-y-4">
+                          <div className="text-sm text-gray-600 mb-3">
+                            <p>Les déficits fonciers peuvent être reportés sur 10 ans. Saisissez vos déficits des années précédentes :</p>
+                          </div>
+                          <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
+                            {taxSituation.previousDeficits.map((deficit, index) => (
+                              <div key={deficit.year}>
+                                <label className="block text-sm font-medium text-gray-700 mb-2">
+                                  {deficit.year}
+                                </label>
+                                <InputField
+                                  label=""
+                                  type="number"
+                                  value={deficit.amount}
+                                  onChange={(e) => {
+                                    const newDeficits = [...taxSituation.previousDeficits];
+                                    newDeficits[index] = { ...deficit, amount: parseFloat(e.target.value) || 0 };
+                                    setTaxSituation({
+                                      ...taxSituation,
+                                      previousDeficits: newDeficits
+                                    });
+                                  }}
+                                  placeholder="Montant (€)"
+                                />
+                              </div>
+                            ))}
+                          </div>
+                          <div className="mt-3 p-3 bg-blue-50 rounded border border-blue-200">
+                            <div className="flex justify-between items-center text-sm">
+                              <span className="text-blue-700 font-medium">Total déficits reportables :</span>
+                              <span className="text-blue-800 font-bold">
+                                {taxSituation.previousDeficits.reduce((total, deficit) => total + deficit.amount, 0).toLocaleString()} €
+                              </span>
+                            </div>
+                          </div>
                         </div>
                       </div>
 
@@ -1616,7 +1679,7 @@ const SimulateurImmobilier = () => {
                               charges: {...revenuesCharges.charges, propertyTaxStartDate: e.target.value.split('-').reverse().join('/')}
                             })}
                           />
-                          <div className="flex items-center mt-6">
+                          <div className="space-y-2">
                             <label className="flex items-center">
                               <input
                                 type="checkbox"
@@ -1629,6 +1692,17 @@ const SimulateurImmobilier = () => {
                               />
                               <span className="text-sm text-gray-700">Exonération taxes foncières</span>
                             </label>
+                            {revenuesCharges.charges.propertyTaxExemption && (
+                              <InputField
+                                label="Durée exonération (années)"
+                                type="number"
+                                value={revenuesCharges.charges.propertyTaxExemptionYears}
+                                onChange={(e) => setRevenuesCharges({
+                                  ...revenuesCharges,
+                                  charges: {...revenuesCharges.charges, propertyTaxExemptionYears: parseInt(e.target.value) || 0}
+                                })}
+                              />
+                            )}
                           </div>
                         </div>
                       </div>
@@ -1686,10 +1760,35 @@ const SimulateurImmobilier = () => {
                         </div>
                       </div>
 
+                      {/* Charges de copropriété */}
+                      <div className="mb-6">
+                        <h4 className="text-md font-medium text-gray-700 mb-3">Charges de copropriété</h4>
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                          <InputField
+                            label="Charges copropriété (€)"
+                            type="number"
+                            value={revenuesCharges.charges.coproprietyCharges}
+                            onChange={(e) => setRevenuesCharges({
+                              ...revenuesCharges,
+                              charges: {...revenuesCharges.charges, coproprietyCharges: parseFloat(e.target.value) || 0}
+                            })}
+                          />
+                          <InputField
+                            label="Réserve maintenance (€)"
+                            type="number"
+                            value={revenuesCharges.charges.maintenanceReserve}
+                            onChange={(e) => setRevenuesCharges({
+                              ...revenuesCharges,
+                              charges: {...revenuesCharges.charges, maintenanceReserve: parseFloat(e.target.value) || 0}
+                            })}
+                          />
+                        </div>
+                      </div>
+
                       {/* Charges diverses */}
                       <div className="mb-6">
                         <h4 className="text-md font-medium text-gray-700 mb-3">Charges diverses</h4>
-                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                           <InputField
                             label="Charges diverses (€)"
                             type="number"
@@ -1709,13 +1808,27 @@ const SimulateurImmobilier = () => {
                               charges: {...revenuesCharges.charges, diverseChargesIndexation: parseFloat(e.target.value) || 0}
                             })}
                           />
+                          <div>
+                            <label className="block text-sm font-medium text-gray-700 mb-2">
+                              Description
+                            </label>
+                            <Textarea
+                              value={revenuesCharges.charges.diverseChargesDescription}
+                              onChange={(e) => setRevenuesCharges({
+                                ...revenuesCharges,
+                                charges: {...revenuesCharges.charges, diverseChargesDescription: e.target.value}
+                              })}
+                              placeholder="Entretien, réparations, syndic..."
+                              rows={2}
+                            />
+                          </div>
                         </div>
                       </div>
 
                       {/* Charges non déductibles */}
                       <div>
                         <h4 className="text-md font-medium text-gray-700 mb-3">Charges non déductibles</h4>
-                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                           <InputField
                             label="Charges non déductibles (€)"
                             type="number"
@@ -1735,74 +1848,21 @@ const SimulateurImmobilier = () => {
                               charges: {...revenuesCharges.charges, nonDeductibleChargesIndexation: parseFloat(e.target.value) || 0}
                             })}
                           />
-                        </div>
-                      </div>
-                    </div>
-
-                    {/* Charges de copropriété */}
-                    <div className="border border-gray-200 rounded-lg p-4 mb-6">
-                      <h4 className="text-md font-medium text-gray-700 mb-3">Charges de copropriété</h4>
-
-                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                        <InputField
-                          label="Montant annuel (€)"
-                          type="number"
-                          value={revenuesCharges.charges.coproprietyCharges}
-                          onChange={(e) => setRevenuesCharges({
-                            ...revenuesCharges,
-                            charges: {...revenuesCharges.charges, coproprietyCharges: parseFloat(e.target.value) || 0}
-                          })}
-                        />
-                        <div className="space-y-2">
-                          <label className="block text-sm font-medium text-gray-700">
-                            Informations
-                          </label>
-                          <div className="text-sm text-gray-600 bg-gray-50 p-2 rounded">
-                            Charges générales, entretien, chauffage collectif, ascenseur...
+                          <div>
+                            <label className="block text-sm font-medium text-gray-700 mb-2">
+                              Description
+                            </label>
+                            <Textarea
+                              value={revenuesCharges.charges.nonDeductibleChargesDescription}
+                              onChange={(e) => setRevenuesCharges({
+                                ...revenuesCharges,
+                                charges: {...revenuesCharges.charges, nonDeductibleChargesDescription: e.target.value}
+                              })}
+                              placeholder="Frais de procédure, pénalités..."
+                              rows={2}
+                            />
                           </div>
                         </div>
-                      </div>
-                    </div>
-
-                    {/* Réserve de maintenance */}
-                    <div className="border border-gray-200 rounded-lg p-4 mb-6">
-                      <h4 className="text-md font-medium text-gray-700 mb-3">Réserve de maintenance</h4>
-
-                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                        <InputField
-                          label="Montant annuel (€)"
-                          type="number"
-                          value={revenuesCharges.charges.maintenanceReserve}
-                          onChange={(e) => setRevenuesCharges({
-                            ...revenuesCharges,
-                            charges: {...revenuesCharges.charges, maintenanceReserve: parseFloat(e.target.value) || 0}
-                          })}
-                        />
-                        <div className="space-y-2">
-                          <label className="block text-sm font-medium text-gray-700">
-                            Recommandation
-                          </label>
-                          <div className="text-sm text-gray-600 bg-yellow-50 p-2 rounded border border-yellow-200">
-                            {investment.acquisitionAmount > 0 ?
-                              `Recommandé: ${Math.round(investment.acquisitionAmount * 0.01).toLocaleString()} € (1% du prix d'acquisition)` :
-                              "Généralement 1% du prix d'acquisition"}
-                          </div>
-                        </div>
-                      </div>
-
-                      <div className="mt-4">
-                        <label className="block text-sm font-medium text-gray-700 mb-2">
-                          Détails de la réserve
-                        </label>
-                        <Textarea
-                          value={revenuesCharges.charges.diverseChargesDescription}
-                          onChange={(e) => setRevenuesCharges({
-                            ...revenuesCharges,
-                            charges: {...revenuesCharges.charges, diverseChargesDescription: e.target.value}
-                          })}
-                          placeholder="Réparations, remplacement équipements, travaux de rénovation..."
-                          rows={2}
-                        />
                       </div>
                     </div>
 
