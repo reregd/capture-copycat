@@ -21,6 +21,18 @@ import SimulateurAssuranceVie from "./pages/SimulateurAssuranceVie";
 import SimulateurProfilInvestisseur from "./pages/SimulateurProfilInvestisseur";
 import SimulateurCredit from "./pages/SimulateurCredit";
 import SimulateurImmobilier from "./pages/SimulateurImmobilier";
+import SimulateurPER from "./pages/SimulateurPER";
+import DiagnosticImpotRevenu from "./pages/DiagnosticImpotRevenu";
+import SimulateurCapaciteAcquisition from "./pages/SimulateurCapaciteAcquisition";
+import SimulateurEpargne from "./pages/SimulateurEpargne";
+import SimulateurFraisNotaire from "./pages/SimulateurFraisNotaire";
+import DiagnosticStatutDirigeant from "./pages/DiagnosticStatutDirigeant";
+import DiagnosticRetraite from "./pages/DiagnosticRetraite";
+import SimulateurSCI from "./pages/SimulateurSCI";
+import DiagnosticSuccession from "./pages/DiagnosticSuccession";
+import DiagnosticIFI from "./pages/DiagnosticIFI";
+import DiagnosticPlusValuesImmo from "./pages/DiagnosticPlusValuesImmo";
+import SimulateurRenteViagere from "./pages/SimulateurRenteViagere";
 import SCI2072 from "./pages/SCI2072";
 import Administration from "./pages/Administration";
 import NotFound from "./pages/NotFound";
@@ -45,6 +57,18 @@ const App = () => (
             <Route path="/simulateur-profil-investisseur" element={<SimulateurProfilInvestisseur />} />
             <Route path="/simulateur-credit" element={<SimulateurCredit />} />
             <Route path="/simulateur-immobilier" element={<SimulateurImmobilier />} />
+            <Route path="/simulateur-per" element={<SimulateurPER />} />
+            <Route path="/diagnostic-impot-revenu" element={<DiagnosticImpotRevenu />} />
+            <Route path="/simulateur-capacite-acquisition" element={<SimulateurCapaciteAcquisition />} />
+            <Route path="/simulateur-epargne" element={<SimulateurEpargne />} />
+            <Route path="/simulateur-frais-notaire" element={<SimulateurFraisNotaire />} />
+            <Route path="/diagnostic-statut-dirigeant" element={<DiagnosticStatutDirigeant />} />
+            <Route path="/diagnostic-retraite" element={<DiagnosticRetraite />} />
+            <Route path="/simulateur-sci" element={<SimulateurSCI />} />
+            <Route path="/diagnostic-succession" element={<DiagnosticSuccession />} />
+            <Route path="/diagnostic-ifi" element={<DiagnosticIFI />} />
+            <Route path="/diagnostic-plus-values-immobilieres" element={<DiagnosticPlusValuesImmo />} />
+            <Route path="/simulateur-rente-viagere" element={<SimulateurRenteViagere />} />
             <Route path="/sci-2072" element={<SCI2072 />} />
             <Route path="/administration/*" element={<Administration />} />
             {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}

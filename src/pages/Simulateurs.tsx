@@ -128,7 +128,14 @@ export default function Simulateurs() {
       4: "/simulateur-per", // Simulateur PER
       5: "/diagnostic-impot-revenu", // Diagnostic Impôt sur le revenu
       6: "/simulateur-credit", // Simulateur Crédit
+      7: "/diagnostic-statut-dirigeant", // Diagnostic statut et rémunération du dirigeant
+      8: "/diagnostic-retraite", // Diagnostic Retraite
+      9: "/simulateur-sci", // Simulateur SCI
+      10: "/diagnostic-succession", // Diagnostic Succession
+      11: "/diagnostic-ifi", // Diagnostic Impôt sur la fortune immobilière
+      12: "/diagnostic-plus-values-immobilieres", // Diagnostic Fiscalité des plus-values immobilières
       13: "/simulateur-capacite-acquisition", // Simulateur Capacité d'Acquisition
+      14: "/simulateur-rente-viagere", // Simulateur Rente Viagère
       15: "/simulateur-epargne", // Simulateur Épargne
       16: "/simulateur-frais-notaire" // Simulateur Frais de notaire
     };
