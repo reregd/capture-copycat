@@ -1,12 +1,12 @@
-import React, { useState, useEffect } from 'react';
-import { Calendar, Calculator, Home, TrendingUp, FileText, Settings, Printer, X, ArrowLeft } from 'lucide-react';
+import { useState } from 'react';
+import { Calendar, Calculator, Home, TrendingUp, FileText, ArrowLeft } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer, BarChart, Bar, PieChart, Pie, Cell } from 'recharts';
+import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer, PieChart, Pie, Cell } from 'recharts';
 import { useNavigate } from 'react-router-dom';
 
 const SimulateurImmobilier = () => {
@@ -192,23 +192,16 @@ const SimulateurImmobilier = () => {
     }));
   };
 
-  const addSavings = () => {
-    setInvestment(prev => ({
-      ...prev,
-      financing: {
-        ...prev.financing,
-        savings: [...prev.financing.savings, { type: "", amount: 0 }]
-      }
-    }));
-  };
 
-  const TabButton = ({ id, label, isActive, onClick }) => (
-    <TabsTrigger value={id} className={isActive ? 'data-[state=active]:bg-gradient-to-r data-[state=active]:from-purple-500 data-[state=active]:to-pink-600' : ''}>
-      {label}
-    </TabsTrigger>
-  );
-
-  const InputField = ({ label, type = "text", value, onChange, placeholder, className = "" }) => (
+  const InputField = ({ label, type = "text", value, onChange, placeholder = "", step, className = "" }: {
+    label: string;
+    type?: string;
+    value: any;
+    onChange: any;
+    placeholder?: string;
+    step?: string;
+    className?: string;
+  }) => (
     <div className={`mb-4 ${className}`}>
       <Label className="text-sm font-medium text-gray-700 mb-1">{label}</Label>
       <Input
@@ -216,12 +209,19 @@ const SimulateurImmobilier = () => {
         value={value}
         onChange={onChange}
         placeholder={placeholder}
-        className="focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+        step={step}
+        className="focus:ring-2 focus:ring-blue-500 focus:border-transparent"
       />
     </div>
   );
 
-  const SelectField = ({ label, value, onChange, options, className = "" }) => (
+  const SelectField = ({ label, value, onChange, options, className = "" }: {
+    label: string;
+    value: string;
+    onChange: (value: string) => void;
+    options: Array<{ value: string; label: string }>;
+    className?: string;
+  }) => (
     <div className={`mb-4 ${className}`}>
       <Label className="text-sm font-medium text-gray-700 mb-1">{label}</Label>
       <Select value={value} onValueChange={onChange}>
@@ -229,7 +229,7 @@ const SimulateurImmobilier = () => {
           <SelectValue />
         </SelectTrigger>
         <SelectContent>
-          {options.map(option => (
+          {options.map((option) => (
             <SelectItem key={option.value} value={option.value}>{option.label}</SelectItem>
           ))}
         </SelectContent>
@@ -250,7 +250,7 @@ const SimulateurImmobilier = () => {
         </div>
         <div className="w-full bg-gray-200 rounded-full h-2">
           <div
-            className="bg-gradient-to-r from-purple-600 to-pink-600 h-2 rounded-full transition-all duration-300"
+            className="bg-gradient-to-r from-blue-600 to-blue-700 h-2 rounded-full transition-all duration-300"
             style={{ width: `${progress}%` }}
           ></div>
         </div>
@@ -262,8 +262,8 @@ const SimulateurImmobilier = () => {
     if (!results || !results.evolutionData) return null;
 
     const pieData = [
-      { name: 'Revenus locatifs', value: results.totalRevenueOverPeriod, fill: '#8884d8' },
-      { name: 'Plus-value', value: results.capitalGain, fill: '#82ca9d' }
+      { name: 'Revenus locatifs', value: results.totalRevenueOverPeriod, fill: '#3b82f6' },
+      { name: 'Plus-value', value: results.capitalGain, fill: '#06b6d4' }
     ];
 
     return (
@@ -280,8 +280,8 @@ const SimulateurImmobilier = () => {
                 <YAxis />
                 <Tooltip formatter={(value) => `${value.toLocaleString()} €`} />
                 <Legend />
-                <Line type="monotone" dataKey="revenusCumules" stroke="#8884d8" name="Revenus cumulés" />
-                <Line type="monotone" dataKey="valeurBien" stroke="#82ca9d" name="Valeur du bien" />
+                <Line type="monotone" dataKey="revenusCumules" stroke="#3b82f6" name="Revenus cumulés" strokeWidth={3} />
+                <Line type="monotone" dataKey="valeurBien" stroke="#06b6d4" name="Valeur du bien" strokeWidth={3} />
               </LineChart>
             </ResponsiveContainer>
           </CardContent>
@@ -333,77 +333,97 @@ const SimulateurImmobilier = () => {
     return (
       <div className="space-y-6">
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-          <Card className="bg-gradient-to-r from-blue-50 to-indigo-50 border-blue-200">
+          <Card className="bg-gradient-to-br from-blue-50 to-blue-100 border-blue-200 shadow-lg hover:shadow-xl transition-all duration-300 hover:-translate-y-1">
             <CardContent className="p-6">
-              <h4 className="font-semibold text-gray-800 mb-3">Investissement</h4>
+              <div className="flex items-center space-x-3 mb-3">
+                <div className="p-2 bg-blue-500 rounded-full">
+                  <Home className="h-5 w-5 text-white" />
+                </div>
+                <span className="text-sm font-semibold text-gray-700">Investissement</span>
+              </div>
               <div className="space-y-2 text-sm">
                 <div className="flex justify-between">
                   <span>Investissement total:</span>
-                  <span className="font-medium">{results.totalInvestment.toLocaleString('fr-FR')} €</span>
+                  <span className="font-medium text-blue-700">{results.totalInvestment.toLocaleString('fr-FR')} €</span>
                 </div>
                 <div className="flex justify-between">
                   <span>Loyer mensuel:</span>
-                  <span className="font-medium">{results.monthlyRent.toLocaleString('fr-FR')} €</span>
+                  <span className="font-medium text-blue-700">{results.monthlyRent.toLocaleString('fr-FR')} €</span>
                 </div>
                 <div className="flex justify-between">
                   <span>Revenus annuels:</span>
-                  <span className="font-medium">{results.annualRent.toLocaleString('fr-FR')} €</span>
+                  <span className="font-medium text-blue-700">{results.annualRent.toLocaleString('fr-FR')} €</span>
                 </div>
               </div>
             </CardContent>
           </Card>
 
-          <Card className="bg-gradient-to-r from-green-50 to-emerald-50 border-green-200">
+          <Card className="bg-gradient-to-br from-green-50 to-green-100 border-green-200 shadow-lg hover:shadow-xl transition-all duration-300 hover:-translate-y-1">
             <CardContent className="p-6">
-              <h4 className="font-semibold text-gray-800 mb-3">Rentabilité</h4>
+              <div className="flex items-center space-x-3 mb-3">
+                <div className="p-2 bg-green-500 rounded-full">
+                  <TrendingUp className="h-5 w-5 text-white" />
+                </div>
+                <span className="text-sm font-semibold text-gray-700">Rentabilité</span>
+              </div>
               <div className="space-y-2 text-sm">
                 <div className="flex justify-between">
                   <span>Rendement brut:</span>
-                  <span className="font-medium text-green-600">{results.grossYield.toFixed(2)}%</span>
+                  <span className="font-medium text-green-700">{results.grossYield.toFixed(2)}%</span>
                 </div>
                 <div className="flex justify-between">
                   <span>Rendement net:</span>
-                  <span className="font-medium text-green-600">{results.netYield.toFixed(2)}%</span>
+                  <span className="font-medium text-green-700">{results.netYield.toFixed(2)}%</span>
                 </div>
                 <div className="flex justify-between">
                   <span>Charges annuelles:</span>
-                  <span className="font-medium">{results.annualCharges.toLocaleString('fr-FR')} €</span>
+                  <span className="font-medium text-green-700">{results.annualCharges.toLocaleString('fr-FR')} €</span>
                 </div>
               </div>
             </CardContent>
           </Card>
 
-          <Card className="bg-gradient-to-r from-purple-50 to-pink-50 border-purple-200">
+          <Card className="bg-gradient-to-br from-indigo-50 to-indigo-100 border-indigo-200 shadow-lg hover:shadow-xl transition-all duration-300 hover:-translate-y-1">
             <CardContent className="p-6">
-              <h4 className="font-semibold text-gray-800 mb-3">Projection</h4>
+              <div className="flex items-center space-x-3 mb-3">
+                <div className="p-2 bg-indigo-500 rounded-full">
+                  <Calendar className="h-5 w-5 text-white" />
+                </div>
+                <span className="text-sm font-semibold text-gray-700">Projection</span>
+              </div>
               <div className="space-y-2 text-sm">
                 <div className="flex justify-between">
                   <span>Revenus nets sur {project.duration} ans:</span>
-                  <span className="font-medium">{results.totalRevenueOverPeriod.toLocaleString('fr-FR')} €</span>
+                  <span className="font-medium text-indigo-700">{results.totalRevenueOverPeriod.toLocaleString('fr-FR')} €</span>
                 </div>
                 <div className="flex justify-between">
                   <span>Plus-value estimée:</span>
-                  <span className="font-medium">{results.capitalGain.toLocaleString('fr-FR')} €</span>
+                  <span className="font-medium text-indigo-700">{results.capitalGain.toLocaleString('fr-FR')} €</span>
                 </div>
                 <div className="flex justify-between">
                   <span>Valeur finale du bien:</span>
-                  <span className="font-medium">{results.finalValue.toLocaleString('fr-FR')} €</span>
+                  <span className="font-medium text-indigo-700">{results.finalValue.toLocaleString('fr-FR')} €</span>
                 </div>
               </div>
             </CardContent>
           </Card>
 
-          <Card className="bg-gradient-to-r from-yellow-50 to-orange-50 border-orange-200">
+          <Card className="bg-gradient-to-br from-cyan-50 to-cyan-100 border-cyan-200 shadow-lg hover:shadow-xl transition-all duration-300 hover:-translate-y-1">
             <CardContent className="p-6">
-              <h4 className="font-semibold text-gray-800 mb-3">Rentabilité globale</h4>
+              <div className="flex items-center space-x-3 mb-3">
+                <div className="p-2 bg-cyan-500 rounded-full">
+                  <Calculator className="h-5 w-5 text-white" />
+                </div>
+                <span className="text-sm font-semibold text-gray-700">Rentabilité globale</span>
+              </div>
               <div className="space-y-2 text-sm">
                 <div className="flex justify-between">
                   <span>Gain total estimé:</span>
-                  <span className="font-bold text-lg text-orange-600">{results.totalReturn.toLocaleString('fr-FR')} €</span>
+                  <span className="font-bold text-lg text-cyan-700">{results.totalReturn.toLocaleString('fr-FR')} €</span>
                 </div>
                 <div className="flex justify-between">
                   <span>Rentabilité globale:</span>
-                  <span className="font-bold text-lg text-orange-600">{results.totalReturnPercentage.toFixed(1)}%</span>
+                  <span className="font-bold text-lg text-cyan-700">{results.totalReturnPercentage.toFixed(1)}%</span>
                 </div>
               </div>
             </CardContent>
@@ -418,27 +438,47 @@ const SimulateurImmobilier = () => {
   return (
     <div className="min-h-screen bg-gray-100 p-4">
       <div className="max-w-7xl mx-auto">
-        {/* En-tête avec bouton retour */}
-        <div className="bg-white rounded-lg shadow-sm p-6 mb-6">
-          <div className="flex items-center justify-between">
+        {/* En-tête avec design bleu */}
+        <div className="relative overflow-hidden bg-gradient-to-br from-blue-600 via-blue-700 to-blue-800 rounded-2xl p-6 md:p-8 mb-8 shadow-2xl">
+          <div className="absolute inset-0 bg-black/10"></div>
+          <div className="relative z-10 flex flex-col sm:flex-row items-start sm:items-center space-y-4 sm:space-y-0 sm:space-x-4">
             <div className="flex items-center space-x-4">
               <Button
-                variant="outline"
+                variant="secondary"
                 size="sm"
                 onClick={() => navigate('/simulateurs')}
-                className="flex items-center space-x-2"
+                className="flex items-center space-x-2 bg-white/20 backdrop-blur-sm text-white border-white/30 hover:bg-white/30"
               >
                 <ArrowLeft className="h-4 w-4" />
                 <span>Retour</span>
               </Button>
-              <div>
-                <h1 className="text-2xl font-bold text-gray-800">Simulateur Immobilier</h1>
-                <p className="text-gray-600">Simuler un investissement immobilier en location nue ou meublé</p>
+              <div className="p-3 bg-white/20 backdrop-blur-sm rounded-xl">
+                <Home className="h-8 w-8 md:h-10 md:w-10 text-white" />
               </div>
             </div>
-            <span className="text-sm text-gray-500">Date de la simulation: 28/09/2025</span>
+            <div className="text-white">
+              <h1 className="text-2xl md:text-4xl font-bold mb-2">Simulateur Immobilier</h1>
+              <p className="text-blue-100 text-base md:text-lg">Simuler un investissement immobilier en location nue ou meublé</p>
+              <div className="flex flex-col sm:flex-row sm:items-center sm:space-x-4 space-y-2 sm:space-y-0 mt-3">
+                <div className="flex items-center space-x-2">
+                  <div className="w-2 h-2 bg-green-400 rounded-full animate-pulse"></div>
+                  <span className="text-xs md:text-sm text-blue-100">Calculs en temps réel</span>
+                </div>
+                <div className="flex items-center space-x-2">
+                  <div className="w-2 h-2 bg-yellow-400 rounded-full animate-pulse"></div>
+                  <span className="text-xs md:text-sm text-blue-100">Analyse détaillée</span>
+                </div>
+              </div>
+            </div>
           </div>
+          <div className="absolute top-0 right-0 w-40 h-40 bg-white/5 rounded-full -mr-20 -mt-20"></div>
+          <div className="absolute bottom-0 left-0 w-32 h-32 bg-white/5 rounded-full -ml-16 -mb-16"></div>
+          <div className="absolute bottom-4 right-4 text-white/70 text-sm">
+            Date de la simulation: 28/09/2025
+          </div>
+        </div>
 
+        <div className="bg-white rounded-lg shadow-sm p-6 mb-6">
           <div className="mt-4 flex gap-4">
             <label className="flex items-center">
               <input
@@ -477,9 +517,16 @@ const SimulateurImmobilier = () => {
               </TabsList>
 
               <TabsContent value="projet">
-                <Card>
-                  <CardHeader>
-                    <CardTitle>Projet</CardTitle>
+                <Card className="shadow-xl border-0 bg-gradient-to-br from-white to-gray-50">
+                  <CardHeader className="bg-gradient-to-r from-gray-50 to-white border-b border-gray-100">
+                    <CardTitle className="flex items-center space-x-3 text-xl">
+                      <div className="p-2 bg-blue-100 rounded-lg">
+                        <Home className="h-6 w-6 text-blue-600" />
+                      </div>
+                      <span className="bg-gradient-to-r from-gray-800 to-gray-600 bg-clip-text text-transparent font-bold">
+                        Projet
+                      </span>
+                    </CardTitle>
                   </CardHeader>
                   <CardContent className="space-y-6">
                     <InputField
@@ -617,9 +664,16 @@ const SimulateurImmobilier = () => {
               </TabsContent>
 
               <TabsContent value="investissement">
-                <Card>
-                  <CardHeader>
-                    <CardTitle>Investissement</CardTitle>
+                <Card className="shadow-xl border-0 bg-gradient-to-br from-white to-gray-50">
+                  <CardHeader className="bg-gradient-to-r from-gray-50 to-white border-b border-gray-100">
+                    <CardTitle className="flex items-center space-x-3 text-xl">
+                      <div className="p-2 bg-blue-100 rounded-lg">
+                        <Calculator className="h-6 w-6 text-blue-600" />
+                      </div>
+                      <span className="bg-gradient-to-r from-gray-800 to-gray-600 bg-clip-text text-transparent font-bold">
+                        Investissement
+                      </span>
+                    </CardTitle>
                   </CardHeader>
                   <CardContent className="space-y-8">
                     {/* Bien immobilier */}
@@ -804,9 +858,16 @@ const SimulateurImmobilier = () => {
               </TabsContent>
 
               <TabsContent value="revenus">
-                <Card>
-                  <CardHeader>
-                    <CardTitle>Revenus et charges</CardTitle>
+                <Card className="shadow-xl border-0 bg-gradient-to-br from-white to-gray-50">
+                  <CardHeader className="bg-gradient-to-r from-gray-50 to-white border-b border-gray-100">
+                    <CardTitle className="flex items-center space-x-3 text-xl">
+                      <div className="p-2 bg-blue-100 rounded-lg">
+                        <TrendingUp className="h-6 w-6 text-blue-600" />
+                      </div>
+                      <span className="bg-gradient-to-r from-gray-800 to-gray-600 bg-clip-text text-transparent font-bold">
+                        Revenus et charges
+                      </span>
+                    </CardTitle>
                   </CardHeader>
                   <CardContent className="space-y-8">
                     {/* Section Revenus */}
@@ -896,9 +957,16 @@ const SimulateurImmobilier = () => {
               </TabsContent>
 
               <TabsContent value="resultats">
-                <Card>
-                  <CardHeader>
-                    <CardTitle>Résultats de la simulation</CardTitle>
+                <Card className="shadow-xl border-0 bg-gradient-to-br from-white to-gray-50">
+                  <CardHeader className="bg-gradient-to-r from-gray-50 to-white border-b border-gray-100">
+                    <CardTitle className="flex items-center space-x-3 text-xl">
+                      <div className="p-2 bg-blue-100 rounded-lg">
+                        <FileText className="h-6 w-6 text-blue-600" />
+                      </div>
+                      <span className="bg-gradient-to-r from-gray-800 to-gray-600 bg-clip-text text-transparent font-bold">
+                        Résultats de la simulation
+                      </span>
+                    </CardTitle>
                   </CardHeader>
                   <CardContent>
                     <ResultsPanel />
@@ -913,7 +981,7 @@ const SimulateurImmobilier = () => {
         <div className="fixed bottom-6 right-6 z-50">
           <Button
             onClick={handleCalculateWithValidation}
-            className="bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 text-white shadow-lg hover:shadow-xl transform hover:-translate-y-0.5 transition-all duration-200 flex items-center space-x-2"
+            className="bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 text-white shadow-lg hover:shadow-xl transform hover:-translate-y-0.5 transition-all duration-200 flex items-center space-x-2"
             size="lg"
           >
             <Calculator className="h-5 w-5" />
