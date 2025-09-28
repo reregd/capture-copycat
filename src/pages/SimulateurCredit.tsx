@@ -22,6 +22,9 @@ interface LoanSimulation {
   totalPayment: number;
   totalInterest: number;
   totalInsurance: number;
+  fraisDossier: number;
+  fraisDossierType: "montant" | "pourcentage";
+  fraisDossierPourcentage: number;
   schedule: Array<{
     month: number;
     mensualite: number;
@@ -49,6 +52,8 @@ export default function SimulateurCredit() {
   const [apportPersonnel, setApportPersonnel] = useState(0);
   const [fraisNotaire, setFraisNotaire] = useState(0);
   const [fraisDossier, setFraisDossier] = useState(500);
+  const [fraisDossierPourcentage, setFraisDossierPourcentage] = useState(0);
+  const [fraisDossierType, setFraisDossierType] = useState<"montant" | "pourcentage">("montant");
   const [garantie, setGarantie] = useState(0);
   const [differePartiel, setDifferePartiel] = useState(0);
   const [differeTotalMois, setDiffereTotalMois] = useState(0);
@@ -78,6 +83,12 @@ export default function SimulateurCredit() {
     const totalMonths = years * 12 + months;
     const monthlyRate = rate / 100 / 12;
     const monthlyInsurance = (loanAmount * (insuranceRate / 100)) / 12;
+
+    // Calcul des frais de dossier
+    const fraisDossierCalcules = fraisDossierType === "pourcentage"
+      ? (loanAmount * fraisDossierPourcentage / 100)
+      : fraisDossier;
+
     const periodsPerYear = periodicity === "mensuelle" ? 12 :
                           periodicity === "trimestrielle" ? 4 :
                           periodicity === "semestrielle" ? 2 : 1;
@@ -95,8 +106,8 @@ export default function SimulateurCredit() {
                           periodicity === "trimestrielle" ? periodPayment / 3 :
                           periodicity === "semestrielle" ? periodPayment / 6 :
                           periodPayment / 12;
-    const totalPayment = (monthlyPayment + monthlyInsurance) * totalMonths;
-    const totalInterest = totalPayment - loanAmount - monthlyInsurance * totalMonths;
+    const totalPayment = (monthlyPayment + monthlyInsurance) * totalMonths + fraisDossierCalcules;
+    const totalInterest = totalPayment - loanAmount - monthlyInsurance * totalMonths - fraisDossierCalcules;
     const totalInsurance = monthlyInsurance * totalMonths;
 
     // Création du tableau d'amortissement
@@ -130,6 +141,9 @@ export default function SimulateurCredit() {
       totalPayment: parseFloat(totalPayment.toFixed(2)),
       totalInterest: parseFloat(totalInterest.toFixed(2)),
       totalInsurance: parseFloat(totalInsurance.toFixed(2)),
+      fraisDossier: parseFloat(fraisDossierCalcules.toFixed(2)),
+      fraisDossierType,
+      fraisDossierPourcentage,
       schedule,
       dateCreated: new Date(),
     };
@@ -149,6 +163,9 @@ export default function SimulateurCredit() {
     setRate(simulation.rate);
     setInsuranceRate(simulation.insuranceRate);
     setPeriodicity(simulation.periodicity);
+    setFraisDossierType(simulation.fraisDossierType);
+    setFraisDossier(simulation.fraisDossier);
+    setFraisDossierPourcentage(simulation.fraisDossierPourcentage);
   };
 
   const exportToCSV = (simulation: LoanSimulation) => {
@@ -185,6 +202,7 @@ export default function SimulateurCredit() {
     { name: 'Capital', value: results.loanAmount, fill: '#3b82f6' },
     { name: 'Intérêts', value: results.totalInterest, fill: '#ef4444' },
     { name: 'Assurance', value: results.totalInsurance, fill: '#f59e0b' },
+    { name: 'Frais dossier', value: results.fraisDossier, fill: '#a855f7' },
   ] : [];
 
   return (
@@ -220,16 +238,6 @@ export default function SimulateurCredit() {
                 max="2000000"
                 step="1000"
               />
-              <div className="mt-2">
-                <Slider
-                  value={[loanAmount]}
-                  onValueChange={(value) => setLoanAmount(value[0])}
-                  max={1000000}
-                  min={10000}
-                  step={5000}
-                  className="w-full"
-                />
-              </div>
             </div>
 
             <div className="flex space-x-2">
@@ -247,7 +255,10 @@ export default function SimulateurCredit() {
                 />
               </div>
               <div className="flex-1">
-                <Label>Mois supplémentaires</Label>
+                <Label className="flex items-center space-x-2">
+                  <Calendar className="h-4 w-4" />
+                  <span>Mois supplémentaires</span>
+                </Label>
                 <Input
                   type="number"
                   value={months}
@@ -339,13 +350,37 @@ export default function SimulateurCredit() {
                   />
                 </div>
                 <div>
-                  <Label>Frais de dossier (€)</Label>
-                  <Input
-                    type="number"
-                    value={fraisDossier}
-                    onChange={(e) => setFraisDossier(+e.target.value)}
-                    min="0"
-                  />
+                  <Label>Frais de dossier</Label>
+                  <div className="space-y-2">
+                    <Select value={fraisDossierType} onValueChange={(value: "montant" | "pourcentage") => setFraisDossierType(value)}>
+                      <SelectTrigger>
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="montant">Montant fixe (€)</SelectItem>
+                        <SelectItem value="pourcentage">Pourcentage (%)</SelectItem>
+                      </SelectContent>
+                    </Select>
+                    {fraisDossierType === "montant" ? (
+                      <Input
+                        type="number"
+                        value={fraisDossier}
+                        onChange={(e) => setFraisDossier(+e.target.value)}
+                        min="0"
+                        placeholder="Montant en €"
+                      />
+                    ) : (
+                      <Input
+                        type="number"
+                        step="0.01"
+                        value={fraisDossierPourcentage}
+                        onChange={(e) => setFraisDossierPourcentage(+e.target.value)}
+                        min="0"
+                        max="5"
+                        placeholder="Pourcentage du montant emprunté"
+                      />
+                    )}
+                  </div>
                 </div>
                 <div>
                   <Label>Garantie (€)</Label>
@@ -391,7 +426,7 @@ export default function SimulateurCredit() {
       {results && (
         <div className="space-y-6">
           {/* Résumé des résultats */}
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4">
             <Card>
               <CardContent className="p-4">
                 <div className="flex items-center space-x-2">
@@ -440,6 +475,22 @@ export default function SimulateurCredit() {
                 <p className="text-2xl font-bold text-orange-600">{results.totalInsurance.toLocaleString()} €</p>
                 <p className="text-xs text-muted-foreground">
                   {((results.totalInsurance / results.totalPayment) * 100).toFixed(1)}% du coût total
+                </p>
+              </CardContent>
+            </Card>
+
+            <Card>
+              <CardContent className="p-4">
+                <div className="flex items-center space-x-2">
+                  <FileSpreadsheet className="h-5 w-5 text-purple-600" />
+                  <span className="text-sm font-medium">Frais dossier</span>
+                </div>
+                <p className="text-2xl font-bold text-purple-600">{results.fraisDossier.toLocaleString()} €</p>
+                <p className="text-xs text-muted-foreground">
+                  {results.fraisDossierType === "pourcentage"
+                    ? `${results.fraisDossierPourcentage}% du capital`
+                    : "Montant fixe"
+                  }
                 </p>
               </CardContent>
             </Card>
