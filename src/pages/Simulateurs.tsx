@@ -121,16 +121,25 @@ export default function Simulateurs() {
   const navigate = useNavigate();
 
   const handleSimulatorClick = (simulatorId: number) => {
-    if (simulatorId === 1) { // Profil investisseur complet
-      navigate("/simulateur-profil-investisseur");
-    } else if (simulatorId === 2) { // Simulateur assurance vie
-      navigate("/simulateur-assurance-vie");
-    } else if (simulatorId === 3) { // Simulateur Immobilier
-      navigate("/simulateur-immobilier");
-    } else if (simulatorId === 6) { // Simulateur Crédit
-      navigate("/simulateur-credit");
+    const routes = {
+      1: "/simulateur-profil-investisseur", // Profil investisseur complet
+      2: "/simulateur-assurance-vie", // Simulateur assurance vie
+      3: "/simulateur-immobilier", // Simulateur Immobilier
+      4: "/simulateur-per", // Simulateur PER
+      5: "/diagnostic-impot-revenu", // Diagnostic Impôt sur le revenu
+      6: "/simulateur-credit", // Simulateur Crédit
+      13: "/simulateur-capacite-acquisition", // Simulateur Capacité d'Acquisition
+      15: "/simulateur-epargne", // Simulateur Épargne
+      16: "/simulateur-frais-notaire" // Simulateur Frais de notaire
+    };
+
+    const route = routes[simulatorId];
+    if (route) {
+      navigate(route);
+    } else {
+      // Simulateurs pas encore implémentés
+      console.log(`Simulateur ${simulatorId} pas encore implémenté`);
     }
-    // Autres simulateurs à implémenter plus tard
   };
 
   return (
