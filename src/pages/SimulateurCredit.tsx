@@ -4,7 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { BarChart, Bar, XAxis, YAxis, Tooltip, Legend, ResponsiveContainer, LineChart, Line, PieChart, Pie, Cell } from "recharts";
+import { BarChart, Bar, XAxis, YAxis, Tooltip, Legend, ResponsiveContainer, LineChart, Line, PieChart, Pie, Cell, AreaChart, Area, ComposedChart } from "recharts";
 import { Calculator, TrendingUp, FileSpreadsheet, Download, Trash2, Copy, Euro, Percent, Calendar, Home } from "lucide-react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Slider } from "@/components/ui/slider";
@@ -198,6 +198,42 @@ export default function SimulateurCredit() {
 
   const chartData = results?.schedule.filter((_, index) => index % Math.ceil(results.schedule.length / 50) === 0) || [];
 
+  // Données pour le graphique des intérêts cumulés
+  const interestData = results?.schedule.map((item, index) => {
+    const cumulativeInterest = results.schedule.slice(0, index + 1).reduce((sum, current) => sum + current.interets, 0);
+    const cumulativeCapital = results.schedule.slice(0, index + 1).reduce((sum, current) => sum + current.capital, 0);
+    return {
+      month: item.month,
+      interetsCumules: parseFloat(cumulativeInterest.toFixed(2)),
+      capitalCumule: parseFloat(cumulativeCapital.toFixed(2)),
+      interetsProgress: parseFloat(((cumulativeInterest / results.totalInterest) * 100).toFixed(1)),
+    };
+  }).filter((_, index) => index % Math.ceil(results.schedule.length / 50) === 0) || [];
+
+  // Données pour le graphique de comparaison
+  const comparisonData = results ? [
+    {
+      periode: '12 mois',
+      interets: parseFloat((results.schedule.slice(0, 12).reduce((sum, item) => sum + item.interets, 0)).toFixed(2)),
+      capital: parseFloat((results.schedule.slice(0, 12).reduce((sum, item) => sum + item.capital, 0)).toFixed(2)),
+    },
+    {
+      periode: '5 ans',
+      interets: parseFloat((results.schedule.slice(0, 60).reduce((sum, item) => sum + item.interets, 0)).toFixed(2)),
+      capital: parseFloat((results.schedule.slice(0, 60).reduce((sum, item) => sum + item.capital, 0)).toFixed(2)),
+    },
+    {
+      periode: '10 ans',
+      interets: parseFloat((results.schedule.slice(0, Math.min(120, results.schedule.length)).reduce((sum, item) => sum + item.interets, 0)).toFixed(2)),
+      capital: parseFloat((results.schedule.slice(0, Math.min(120, results.schedule.length)).reduce((sum, item) => sum + item.capital, 0)).toFixed(2)),
+    },
+    {
+      periode: 'Total',
+      interets: results.totalInterest,
+      capital: results.loanAmount,
+    },
+  ] : [];
+
   const pieData = results ? [
     { name: 'Capital', value: results.loanAmount, fill: '#3b82f6' },
     { name: 'Intérêts', value: results.totalInterest, fill: '#ef4444' },
@@ -207,20 +243,41 @@ export default function SimulateurCredit() {
 
   return (
     <div className="container mx-auto p-6 space-y-6">
-      <div className="flex items-center space-x-3 mb-6">
-        <Calculator className="h-8 w-8 text-blue-600" />
-        <div>
-          <h1 className="text-3xl font-bold text-foreground">Simulateur de Crédit</h1>
-          <p className="text-muted-foreground">Calculez votre capacité d'emprunt et optimisez votre financement</p>
+      <div className="relative overflow-hidden bg-gradient-to-br from-blue-600 via-blue-700 to-blue-800 rounded-2xl p-6 md:p-8 mb-8 shadow-2xl">
+        <div className="absolute inset-0 bg-black/10"></div>
+        <div className="relative z-10 flex flex-col sm:flex-row items-start sm:items-center space-y-4 sm:space-y-0 sm:space-x-4">
+          <div className="p-3 bg-white/20 backdrop-blur-sm rounded-xl">
+            <Calculator className="h-8 w-8 md:h-10 md:w-10 text-white" />
+          </div>
+          <div className="text-white">
+            <h1 className="text-2xl md:text-4xl font-bold mb-2">Simulateur de Crédit</h1>
+            <p className="text-blue-100 text-base md:text-lg">Calculez votre capacité d'emprunt et optimisez votre financement</p>
+            <div className="flex flex-col sm:flex-row sm:items-center sm:space-x-4 space-y-2 sm:space-y-0 mt-3">
+              <div className="flex items-center space-x-2">
+                <div className="w-2 h-2 bg-green-400 rounded-full animate-pulse"></div>
+                <span className="text-xs md:text-sm text-blue-100">Calculs en temps réel</span>
+              </div>
+              <div className="flex items-center space-x-2">
+                <div className="w-2 h-2 bg-yellow-400 rounded-full animate-pulse"></div>
+                <span className="text-xs md:text-sm text-blue-100">Simulations sauvegardées</span>
+              </div>
+            </div>
+          </div>
         </div>
+        <div className="absolute top-0 right-0 w-40 h-40 bg-white/5 rounded-full -mr-20 -mt-20"></div>
+        <div className="absolute bottom-0 left-0 w-32 h-32 bg-white/5 rounded-full -ml-16 -mb-16"></div>
       </div>
 
       {/* Formulaire de simulation */}
-      <Card>
-        <CardHeader>
-          <CardTitle className="flex items-center space-x-2">
-            <Home className="h-5 w-5" />
-            <span>Votre projet de financement</span>
+      <Card className="shadow-xl border-0 bg-gradient-to-br from-white to-gray-50">
+        <CardHeader className="bg-gradient-to-r from-gray-50 to-white border-b border-gray-100">
+          <CardTitle className="flex items-center space-x-3 text-xl">
+            <div className="p-2 bg-blue-100 rounded-lg">
+              <Home className="h-6 w-6 text-blue-600" />
+            </div>
+            <span className="bg-gradient-to-r from-gray-800 to-gray-600 bg-clip-text text-transparent font-bold">
+              Votre projet de financement
+            </span>
           </CardTitle>
         </CardHeader>
         <CardContent className="space-y-6">
@@ -415,9 +472,13 @@ export default function SimulateurCredit() {
             )}
           </div>
 
-          <Button onClick={calculateLoan} className="w-full md:w-auto" size="lg">
-            <Calculator className="h-4 w-4 mr-2" />
-            Calculer ma simulation
+          <Button
+            onClick={calculateLoan}
+            className="w-full md:w-auto bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 text-white shadow-lg hover:shadow-xl transform hover:-translate-y-0.5 transition-all duration-200"
+            size="lg"
+          >
+            <Calculator className="h-5 w-5 mr-3" />
+            <span className="font-semibold">Calculer ma simulation</span>
           </Button>
         </CardContent>
       </Card>
@@ -426,72 +487,106 @@ export default function SimulateurCredit() {
       {results && (
         <div className="space-y-6">
           {/* Résumé des résultats */}
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4">
-            <Card>
-              <CardContent className="p-4">
-                <div className="flex items-center space-x-2">
-                  <Euro className="h-5 w-5 text-blue-600" />
-                  <span className="text-sm font-medium">Mensualité</span>
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-4">
+            <Card className="bg-gradient-to-br from-blue-50 to-blue-100 border-blue-200 shadow-lg hover:shadow-xl transition-all duration-300 hover:-translate-y-1">
+              <CardContent className="p-6">
+                <div className="flex items-center space-x-3 mb-3">
+                  <div className="p-2 bg-blue-500 rounded-full">
+                    <Euro className="h-5 w-5 text-white" />
+                  </div>
+                  <span className="text-sm font-semibold text-gray-700">Mensualité</span>
                 </div>
-                <p className="text-2xl font-bold text-blue-600">{results.monthlyPayment.toLocaleString()} €</p>
-                <p className="text-xs text-muted-foreground">
-                  {((results.monthlyPayment / 3500) * 100).toFixed(1)}% d'un salaire de 3 500€
-                </p>
+                <p className="text-3xl font-bold text-blue-700 mb-2">{results.monthlyPayment.toLocaleString()} €</p>
+                <div className="flex items-center space-x-2">
+                  <div className="flex-1 bg-gray-200 rounded-full h-2">
+                    <div
+                      className="bg-blue-500 h-2 rounded-full transition-all duration-500"
+                      style={{ width: `${Math.min(((results.monthlyPayment / 3500) * 100), 100)}%` }}
+                    ></div>
+                  </div>
+                  <span className="text-xs text-gray-600 font-medium">
+                    {((results.monthlyPayment / 3500) * 100).toFixed(1)}%
+                  </span>
+                </div>
+                <p className="text-xs text-gray-500 mt-1">d'un salaire de 3 500€</p>
               </CardContent>
             </Card>
 
-            <Card>
-              <CardContent className="p-4">
-                <div className="flex items-center space-x-2">
-                  <TrendingUp className="h-5 w-5 text-green-600" />
-                  <span className="text-sm font-medium">Coût total</span>
+            <Card className="bg-gradient-to-br from-green-50 to-green-100 border-green-200 shadow-lg hover:shadow-xl transition-all duration-300 hover:-translate-y-1">
+              <CardContent className="p-6">
+                <div className="flex items-center space-x-3 mb-3">
+                  <div className="p-2 bg-green-500 rounded-full">
+                    <TrendingUp className="h-5 w-5 text-white" />
+                  </div>
+                  <span className="text-sm font-semibold text-gray-700">Coût total</span>
                 </div>
-                <p className="text-2xl font-bold text-green-600">{results.totalPayment.toLocaleString()} €</p>
-                <p className="text-xs text-muted-foreground">
-                  +{((results.totalPayment / results.loanAmount - 1) * 100).toFixed(1)}% du capital emprunté
-                </p>
+                <p className="text-3xl font-bold text-green-700 mb-2">{results.totalPayment.toLocaleString()} €</p>
+                <div className="bg-green-100 rounded-lg p-2">
+                  <p className="text-xs text-green-700 font-medium">
+                    +{((results.totalPayment / results.loanAmount - 1) * 100).toFixed(1)}% du capital emprunté
+                  </p>
+                </div>
               </CardContent>
             </Card>
 
-            <Card>
-              <CardContent className="p-4">
-                <div className="flex items-center space-x-2">
-                  <Percent className="h-5 w-5 text-red-600" />
-                  <span className="text-sm font-medium">Intérêts</span>
+            <Card className="bg-gradient-to-br from-red-50 to-red-100 border-red-200 shadow-lg hover:shadow-xl transition-all duration-300 hover:-translate-y-1">
+              <CardContent className="p-6">
+                <div className="flex items-center space-x-3 mb-3">
+                  <div className="p-2 bg-red-500 rounded-full">
+                    <Percent className="h-5 w-5 text-white" />
+                  </div>
+                  <span className="text-sm font-semibold text-gray-700">Intérêts</span>
                 </div>
-                <p className="text-2xl font-bold text-red-600">{results.totalInterest.toLocaleString()} €</p>
-                <p className="text-xs text-muted-foreground">
-                  {((results.totalInterest / results.totalPayment) * 100).toFixed(1)}% du coût total
-                </p>
+                <p className="text-3xl font-bold text-red-700 mb-2">{results.totalInterest.toLocaleString()} €</p>
+                <div className="flex items-center space-x-2">
+                  <div className="flex-1 bg-gray-200 rounded-full h-2">
+                    <div
+                      className="bg-red-500 h-2 rounded-full transition-all duration-500"
+                      style={{ width: `${(results.totalInterest / results.totalPayment) * 100}%` }}
+                    ></div>
+                  </div>
+                  <span className="text-xs text-gray-600 font-medium">
+                    {((results.totalInterest / results.totalPayment) * 100).toFixed(1)}%
+                  </span>
+                </div>
+                <p className="text-xs text-gray-500 mt-1">du coût total</p>
               </CardContent>
             </Card>
 
-            <Card>
-              <CardContent className="p-4">
-                <div className="flex items-center space-x-2">
-                  <FileSpreadsheet className="h-5 w-5 text-orange-600" />
-                  <span className="text-sm font-medium">Assurance</span>
+            <Card className="bg-gradient-to-br from-orange-50 to-orange-100 border-orange-200 shadow-lg hover:shadow-xl transition-all duration-300 hover:-translate-y-1">
+              <CardContent className="p-6">
+                <div className="flex items-center space-x-3 mb-3">
+                  <div className="p-2 bg-orange-500 rounded-full">
+                    <FileSpreadsheet className="h-5 w-5 text-white" />
+                  </div>
+                  <span className="text-sm font-semibold text-gray-700">Assurance</span>
                 </div>
-                <p className="text-2xl font-bold text-orange-600">{results.totalInsurance.toLocaleString()} €</p>
-                <p className="text-xs text-muted-foreground">
-                  {((results.totalInsurance / results.totalPayment) * 100).toFixed(1)}% du coût total
-                </p>
+                <p className="text-3xl font-bold text-orange-700 mb-2">{results.totalInsurance.toLocaleString()} €</p>
+                <div className="bg-orange-100 rounded-lg p-2">
+                  <p className="text-xs text-orange-700 font-medium">
+                    {((results.totalInsurance / results.totalPayment) * 100).toFixed(1)}% du coût total
+                  </p>
+                </div>
               </CardContent>
             </Card>
 
-            <Card>
-              <CardContent className="p-4">
-                <div className="flex items-center space-x-2">
-                  <FileSpreadsheet className="h-5 w-5 text-purple-600" />
-                  <span className="text-sm font-medium">Frais dossier</span>
+            <Card className="bg-gradient-to-br from-purple-50 to-purple-100 border-purple-200 shadow-lg hover:shadow-xl transition-all duration-300 hover:-translate-y-1">
+              <CardContent className="p-6">
+                <div className="flex items-center space-x-3 mb-3">
+                  <div className="p-2 bg-purple-500 rounded-full">
+                    <FileSpreadsheet className="h-5 w-5 text-white" />
+                  </div>
+                  <span className="text-sm font-semibold text-gray-700">Frais dossier</span>
                 </div>
-                <p className="text-2xl font-bold text-purple-600">{results.fraisDossier.toLocaleString()} €</p>
-                <p className="text-xs text-muted-foreground">
-                  {results.fraisDossierType === "pourcentage"
-                    ? `${results.fraisDossierPourcentage}% du capital`
-                    : "Montant fixe"
-                  }
-                </p>
+                <p className="text-3xl font-bold text-purple-700 mb-2">{results.fraisDossier.toLocaleString()} €</p>
+                <div className="bg-purple-100 rounded-lg p-2">
+                  <p className="text-xs text-purple-700 font-medium">
+                    {results.fraisDossierType === "pourcentage"
+                      ? `${results.fraisDossierPourcentage}% du capital`
+                      : "Montant fixe"
+                    }
+                  </p>
+                </div>
               </CardContent>
             </Card>
           </div>
@@ -503,10 +598,12 @@ export default function SimulateurCredit() {
             </CardHeader>
             <CardContent>
               <Tabs value={selectedChart} onValueChange={setSelectedChart}>
-                <TabsList className="grid w-full grid-cols-4">
+                <TabsList className="grid w-full grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-1">
                   <TabsTrigger value="amortization">Amortissement</TabsTrigger>
                   <TabsTrigger value="evolution">Évolution</TabsTrigger>
                   <TabsTrigger value="repartition">Répartition</TabsTrigger>
+                  <TabsTrigger value="interets">Intérêts</TabsTrigger>
+                  <TabsTrigger value="comparaison">Comparaison</TabsTrigger>
                   <TabsTrigger value="tableau">Tableau</TabsTrigger>
                 </TabsList>
 
@@ -561,6 +658,63 @@ export default function SimulateurCredit() {
                   </div>
                 </TabsContent>
 
+                <TabsContent value="interets" className="mt-6">
+                  <ResponsiveContainer width="100%" height={400}>
+                    <ComposedChart data={interestData}>
+                      <XAxis dataKey="month" />
+                      <YAxis yAxisId="left" />
+                      <YAxis yAxisId="right" orientation="right" />
+                      <Tooltip
+                        formatter={(value, name) => [`${Number(value).toLocaleString()} €`, name]}
+                        labelFormatter={(label) => `Mois ${label}`}
+                      />
+                      <Legend />
+                      <Area
+                        yAxisId="left"
+                        type="monotone"
+                        dataKey="interetsCumules"
+                        stackId="1"
+                        stroke="#ef4444"
+                        fill="#ef4444"
+                        fillOpacity={0.6}
+                        name="Intérêts cumulés"
+                      />
+                      <Area
+                        yAxisId="left"
+                        type="monotone"
+                        dataKey="capitalCumule"
+                        stackId="1"
+                        stroke="#3b82f6"
+                        fill="#3b82f6"
+                        fillOpacity={0.6}
+                        name="Capital amorti"
+                      />
+                      <Line
+                        yAxisId="right"
+                        type="monotone"
+                        dataKey="interetsProgress"
+                        stroke="#f59e0b"
+                        strokeWidth={3}
+                        name="% Intérêts payés"
+                        dot={{ fill: '#f59e0b', strokeWidth: 2, r: 4 }}
+                      />
+                    </ComposedChart>
+                  </ResponsiveContainer>
+                </TabsContent>
+
+                <TabsContent value="comparaison" className="mt-6">
+                  <ResponsiveContainer width="100%" height={400}>
+                    <BarChart data={comparisonData}>
+                      <XAxis dataKey="periode" />
+                      <YAxis />
+                      <Tooltip formatter={(value, name) => [`${Number(value).toLocaleString()} €`, name]} />
+                      <Legend />
+                      <Bar dataKey="capital" stackId="a" fill="#3b82f6" name="Capital remboursé" />
+                      <Bar dataKey="interets" stackId="a" fill="#ef4444" name="Intérêts payés" />
+                    </BarChart>
+                  </ResponsiveContainer>
+                </TabsContent>
+
                 <TabsContent value="tableau" className="mt-6">
                   <div className="flex justify-between items-center mb-4">
                     <h3 className="font-bold">Échéancier détaillé</h3>
@@ -609,7 +763,7 @@ export default function SimulateurCredit() {
             <CardTitle>Comparateur de simulations</CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+            <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
               {simulations.map((sim) => (
                 <Card key={sim.id} className="shadow-lg border-l-4 border-l-blue-500">
                   <CardHeader className="pb-3">

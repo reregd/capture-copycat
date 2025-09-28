@@ -125,6 +125,8 @@ export default function Simulateurs() {
       navigate("/simulateur-profil-investisseur");
     } else if (simulatorId === 2) { // Simulateur assurance vie
       navigate("/simulateur-assurance-vie");
+    } else if (simulatorId === 3) { // Simulateur Immobilier
+      navigate("/simulateur-immobilier");
     } else if (simulatorId === 6) { // Simulateur Crédit
       navigate("/simulateur-credit");
     }
